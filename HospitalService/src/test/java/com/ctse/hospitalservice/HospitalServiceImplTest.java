@@ -7,7 +7,7 @@ import com.ctse.hospitalservice.dto.HospitalWithDoctorsDTO;
 import com.ctse.hospitalservice.exception.ResourceNotFoundException;
 import com.ctse.hospitalservice.model.Hospital;
 import com.ctse.hospitalservice.repository.HospitalRepository;
-import com.ctse.hospitalservice.service.serviceImpl.HospitalServiceImpl;
+import com.ctse.hospitalservice.service.serviceimpl.HospitalServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -63,7 +63,7 @@ class HospitalServiceImplTest {
         when(hospitalRepository.existsByEmail(hospitalDTO.getEmail())).thenReturn(true);
 
         assertThatThrownBy(() -> hospitalService.createHospital(hospitalDTO))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("already exists");
 
         verify(hospitalRepository, never()).save(any());
