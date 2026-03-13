@@ -179,12 +179,12 @@ public class UserServiceImpl implements UserService {
         Patient patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new RuntimeException("Patient not found"));
 
+        patientRepository.deleteById(patientId);
+
         // Delete associated user if exists
         if (patient.getUserId() != null) {
             userRepository.deleteById(patient.getUserId());
         }
-
-        patientRepository.deleteById(patientId);
     }
 
     // Doctor operations
@@ -257,11 +257,11 @@ public class UserServiceImpl implements UserService {
         Doctor doctor = doctorRepository.findById(doctorId)
                 .orElseThrow(() -> new RuntimeException("Doctor not found"));
 
+        doctorRepository.deleteById(doctorId);
+
         // Delete associated user if exists
         if (doctor.getUserId() != null) {
             userRepository.deleteById(doctor.getUserId());
         }
-
-        doctorRepository.deleteById(doctorId);
     }
 }
