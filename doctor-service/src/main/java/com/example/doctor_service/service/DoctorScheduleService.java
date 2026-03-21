@@ -18,7 +18,8 @@ import java.util.List;
 public class DoctorScheduleService {
 
    
-    @Value("${appointment.service.url:${APPOINTMENT_SERVICE_URL:http://localhost:8084}}")
+    //@Value("${appointment.service.url:${APPOINTMENT_SERVICE_URL:http://localhost:8084}}")
+   @Value("${DOCTOR_SERVICE_URL:https://appointment-service-hxup.onrender.com}")
        
 
     private String appointmentServiceUrl;
