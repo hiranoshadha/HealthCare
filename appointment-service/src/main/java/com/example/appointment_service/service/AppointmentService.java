@@ -25,8 +25,10 @@ public class AppointmentService {
     private static final DateTimeFormatter HH_MM_SS = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     
-     @Value("${DOCTOR_SERVICE_URL:http://doctor-service:8083}")
-      // @Value("${doctor.service.url:http://localhost:8081}")
+    // @Value("${DOCTOR_SERVICE_URL:http://doctor-service:8083}")
+    
+    @Value("${DOCTOR_SERVICE_URL:https://doctor-service-3h4t.onrender.com}")
+      
     private String doctorServiceUrl;
 
     @Autowired
