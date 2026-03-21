@@ -6,6 +6,7 @@ import com.example.doctor_service.service.DoctorScheduleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -18,9 +19,14 @@ public class DoctorScheduleController {
 
     // Create new schedule
     @PostMapping
-    public ResponseEntity<DoctorSchedule> create(@RequestBody DoctorSchedule schedule) {
-        DoctorSchedule saved = service.createSchedule(schedule);
-        return ResponseEntity.ok(saved);
+    public ResponseEntity<?> create(@RequestBody DoctorSchedule schedule) {
+        try {
+            DoctorSchedule saved = service.createSchedule(schedule);
+            return ResponseEntity.ok(saved);
+        } catch (ResponseStatusException e) {
+            String message = e.getReason() == null ? "Unable to create schedule" : e.getReason();
+            return ResponseEntity.status(e.getStatusCode()).body(message);
+        }
     }
 
     // Get schedule by ID
@@ -32,6 +38,11 @@ public class DoctorScheduleController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping
+    public ResponseEntity<List<DoctorSchedule>> getAll() {
+        return ResponseEntity.ok(service.getAllSchedules());
     }
 
     // Optional: Get all schedules for a doctor
