@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Doctor Registration — MediConnect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary:       #0ea5e9;
+      --primary-dark:  #0284c7;
+      --secondary:     #06b6d4;
+      --accent:        #8b5cf6;
+      --success:       #10b981;
+      --danger:        #ef4444;
+      --warning:       #f59e0b;
+      --bg:            #080f1a;
+      --bg-card:       #0f1c2e;
+      --bg-card2:      #162033;
+      --border:        #1e3248;
+      --border-light:  #243a52;
+      --text:          #e8f4fd;
+      --text-muted:    #7ea8c9;
+      --text-dim:      #3d6080;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ─── LAYOUT ─────────────────────────────────────────── */
+    .layout { display: flex; min-height: 100vh; width: 100%; }
+
+    /* ─── SIDEBAR ─────────────────────────────────────────── */
+    .sidebar {
+      width: 256px;
+      background: var(--bg-card);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      position: fixed; height: 100vh; z-index: 200;
+    }
+    .logo {
+      padding: 28px 20px 24px;
+      display: flex; align-items: center; gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo-icon {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+      box-shadow: 0 0 20px rgba(14,165,233,.35);
+    }
+    .logo-name {
+      font-size: 17px; font-weight: 800;
+      background: linear-gradient(135deg, #e0f2ff, var(--primary));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .logo-sub { font-size: 10px; color: var(--text-dim); font-weight: 500; letter-spacing: .5px; }
+    .nav { flex: 1; padding: 20px 12px; overflow-y: auto; }
+    .nav-item {
+      display: flex; align-items: center; gap: 11px;
+      padding: 10px 12px; border-radius: 10px;
+      cursor: pointer; color: var(--text-muted);
+      font-size: 13.5px; font-weight: 500;
+      transition: all .2s; margin-bottom: 2px;
+      text-decoration: none;
+    }
+    .nav-item:hover { background: rgba(14,165,233,.08); color: var(--primary); }
+    .nav-item.active {
+      background: linear-gradient(135deg, rgba(14,165,233,.15), rgba(139,92,246,.08));
+      color: var(--primary); border: 1px solid rgba(14,165,233,.18);
+    }
+    .nav-icon { font-size: 17px; width: 20px; text-align: center; }
+    .sidebar-bottom { padding: 16px 20px; border-top: 1px solid var(--border); }
+    .api-badge { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 6px var(--success); animation: blink 2s infinite; }
+    .dot.off { background: var(--danger); box-shadow: 0 0 6px var(--danger); animation: none; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* ─── MAIN ─────────────────────────────────────────────── */
+    .main { margin-left: 256px; flex: 1; padding: 36px 36px 60px; min-height: 100vh; }
+
+    .container {
+      max-width: 100%;
+      padding: 0;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo-name {
+      font-size: 24px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #e0f2ff, var(--primary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .logo-sub {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .auth-notice {
+      background: rgba(245,158,11,.1);
+      border: 1px solid rgba(245,158,11,.2);
+      color: var(--warning);
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .auth-notice strong {
+      color: var(--warning);
+    }
+
+    .form-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.4);
+    }
+
+    .form-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: all .2s;
+    }
+
+    .form-input::placeholder {
+      color: var(--text-dim);
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(14,165,233,.12);
+    }
+
+    .form-select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: all .2s;
+      width: 100%;
+    }
+
+    .form-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(14,165,233,.12);
+    }
+
+    .btn-full {
+      width: 100%;
+      margin-top: 8px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .links {
+      text-align: center;
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .link {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      margin: 0 12px;
+      transition: color .2s;
+    }
+
+    .link:hover {
+      color: var(--secondary);
+    }
+
+    .error-message {
+      background: rgba(239,68,68,.1);
+      border: 1px solid rgba(239,68,68,.2);
+      color: var(--danger);
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .success-message {
+      background: rgba(16,185,129,.1);
+      border: 1px solid rgba(16,185,129,.2);
+      color: var(--success);
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .spin {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: rot .6s linear infinite;
+      display: inline-block;
+      margin-right: 8px;
+    }
+
+    @keyframes rot {
+      to { transform: rotate(360deg); }
+    }
+
+    .access-denied {
+      text-align: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.4);
+      display: none;
+    }
+
+    .access-denied .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .access-denied .title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--danger);
+    }
+
+    .access-denied .message {
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+      transition: all .2s;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #fff;
+      box-shadow: 0 4px 18px rgba(14,165,233,.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(14,165,233,.45);
+    }
+
+    .btn-danger {
+      background: rgba(239,68,68,.1);
+      color: var(--danger);
+      border: 1px solid rgba(239,68,68,.2);
+      width: 100%;
+      margin-top: 12px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .btn-danger:hover {
+      background: rgba(239,68,68,.2);
+    }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 20px; }
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      .container {
+        padding: 10px;
+      }
+      .form-container {
+        padding: 24px 20px;
+      }
+    }
+    
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <!-- ── SIDEBAR ── -->
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="logo-icon">🏥</div>
+        <div>
+          <div class="logo-name">MediConnect</div>
+          <div class="logo-sub">Admin Portal</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <a id="navDoctorReg" class="nav-item active" href="doctor-registration.html" style="display:none;"><span class="nav-icon">⚕️</span> Doctor Registration</a>
+        <a id="navHospital" class="nav-item" href="hospital.html" style="display:none;"><span class="nav-icon">🏥</span> Hospitals</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <button class="btn btn-danger" onclick="logout()">
+          <span>🚪</span>
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ── MAIN ── -->
+    <main class="main">
+      <div class="container">
+    <div class="header">
+      <div class="logo-icon">🏥</div>
+      <div class="logo-name">MediConnect</div>
+      <div class="logo-sub">Doctor Registration</div>
+    </div>
+
+    <div id="accessDenied" class="access-denied">
+      <div class="icon">🚫</div>
+      <div class="title">Access Denied</div>
+      <div class="message">Only administrators can register doctors. Please contact your system administrator.</div>
+      <a href="login.html" class="btn">Go to Login</a>
+    </div>
+
+    <div id="registrationForm" style="display: none;">
+
+      <div class="form-container">
+        <div class="form-title">Register New Doctor</div>
+
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+
+        <form id="doctorForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="firstName">First Name *</label>
+              <input type="text" id="firstName" name="firstName" class="form-input" placeholder="Enter first name" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="lastName">Last Name *</label>
+              <input type="text" id="lastName" name="lastName" class="form-input" placeholder="Enter last name" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="specialization">Specialization *</label>
+              <select id="specialization" name="specialization" class="form-select" required>
+                <option value="">Select specialization</option>
+                <option value="Cardiology">Cardiology</option>
+                <option value="Dermatology">Dermatology</option>
+                <option value="Emergency Medicine">Emergency Medicine</option>
+                <option value="Endocrinology">Endocrinology</option>
+                <option value="Gastroenterology">Gastroenterology</option>
+                <option value="General Medicine">General Medicine</option>
+                <option value="Neurology">Neurology</option>
+                <option value="Obstetrics & Gynecology">Obstetrics & Gynecology</option>
+                <option value="Oncology">Oncology</option>
+                <option value="Ophthalmology">Ophthalmology</option>
+                <option value="Orthopedics">Orthopedics</option>
+                <option value="Pediatrics">Pediatrics</option>
+                <option value="Psychiatry">Psychiatry</option>
+                <option value="Radiology">Radiology</option>
+                <option value="Surgery">Surgery</option>
+                <option value="Urology">Urology</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="licenseNumber">License Number *</label>
+              <input type="text" id="licenseNumber" name="licenseNumber" class="form-input" placeholder="Enter license number" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="email">Email *</label>
+              <input type="email" id="email" name="email" class="form-input" placeholder="Enter email address" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="phoneNumber">Phone Number *</label>
+              <input type="tel" id="phoneNumber" name="phoneNumber" class="form-input" placeholder="Enter phone number" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="username">Username *</label>
+              <input type="text" id="username" name="username" class="form-input" placeholder="Choose a username" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="password">Password *</label>
+              <input type="password" id="password" name="password" class="form-input" placeholder="Create a password" required>
+            </div>
+          </div>
+
+          <button type="submit" id="registerBtn" class="btn btn-full">
+            <span id="btnText">Register Doctor</span>
+          </button>
+        </form>
+
+        <div class="links">
+          <a href="login.html" class="link">Back to Login</a>
+          <a href="patient-signup.html" class="link">Patient Registration</a>
+        </div>
+      </div>
+    </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API_USER = 'http://localhost:8081';
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    }
+
+    function updateNavigation() {
+      const role = localStorage.getItem('role');
+      const navDoctorReg = document.getElementById('navDoctorReg');
+      const navHospital = document.getElementById('navHospital');
+      
+      // Only show navigation if user is admin
+      if (role === 'ADMIN') {
+        navDoctorReg.style.display = 'flex';
+        navHospital.style.display = 'flex';
+      } else {
+        navDoctorReg.style.display = 'none';
+        navHospital.style.display = 'none';
+      }
+    }
+
+    // Utility functions
+    function showError(message) {
+      const errorDiv = document.getElementById('errorMessage');
+      const successDiv = document.getElementById('successMessage');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+      successDiv.style.display = 'none';
+    }
+
+    function showSuccess(message) {
+      const errorDiv = document.getElementById('errorMessage');
+      const successDiv = document.getElementById('successMessage');
+      successDiv.textContent = message;
+      successDiv.style.display = 'block';
+      errorDiv.style.display = 'none';
+    }
+
+    function hideMessages() {
+      document.getElementById('errorMessage').style.display = 'none';
+      document.getElementById('successMessage').style.display = 'none';
+    }
+
+    function setLoading(loading) {
+      const btn = document.getElementById('registerBtn');
+      const btnText = document.getElementById('btnText');
+
+      if (loading) {
+        btn.disabled = true;
+        btnText.innerHTML = '<span class="spin"></span>Registering Doctor...';
+      } else {
+        btn.disabled = false;
+        btnText.textContent = 'Register Doctor';
+      }
+    }
+
+    // Check admin access
+    function checkAdminAccess() {
+      const token = localStorage.getItem('token');
+      const role = localStorage.getItem('role');
+
+      if (!token || role !== 'ADMIN') {
+        document.getElementById('accessDenied').style.display = 'block';
+        document.getElementById('registrationForm').style.display = 'none';
+        return false;
+      }
+
+      document.getElementById('accessDenied').style.display = 'none';
+      document.getElementById('registrationForm').style.display = 'block';
+      return true;
+    }
+
+    // Doctor registration function
+    async function registerDoctor(doctorData, password) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_USER}/api/users/doctors?password=${encodeURIComponent(password)}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(doctorData)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showSuccess('Doctor registered successfully!');
+          document.getElementById('doctorForm').reset();
+        } else {
+          showError(data.message || 'Registration failed');
+        }
+      } catch (error) {
+        showError('Network error. Please try again.');
+        console.error('Registration error:', error);
+      }
+    }
+
+    // Form submission
+    document.getElementById('doctorForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideMessages();
+
+      const formData = new FormData(e.target);
+      const doctorData = {
+        firstName: formData.get('firstName').trim(),
+        lastName: formData.get('lastName').trim(),
+        specialization: formData.get('specialization'),
+        licenseNumber: formData.get('licenseNumber').trim(),
+        email: formData.get('email').trim(),
+        phoneNumber: formData.get('phoneNumber').trim(),
+        username: formData.get('username').trim()
+      };
+
+      const password = formData.get('password');
+
+      // Basic validation
+      if (!doctorData.firstName || !doctorData.lastName || !doctorData.specialization ||
+          !doctorData.licenseNumber || !doctorData.email || !doctorData.phoneNumber ||
+          !doctorData.username || !password) {
+        showError('Please fill in all required fields');
+        return;
+      }
+
+      if (password.length < 6) {
+        showError('Password must be at least 6 characters long');
+        return;
+      }
+
+      setLoading(true);
+      await registerDoctor(doctorData, password);
+      setLoading(false);
+    });
+
+    // Initialize page
+    window.addEventListener('DOMContentLoaded', () => {
+      updateNavigation();
+      checkAdminAccess();
+    });
+  </script>
+</body>
+</html>
