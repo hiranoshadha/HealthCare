@@ -372,6 +372,19 @@
     }
   }
 
+  async function loadAppointments() {
+    try {
+      const res = await fetch(API_APPOINTMENT + '/appointments');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      createdAppointments = Array.isArray(data) ? data : [];
+      updateStats();
+      renderAppointments();
+    } catch (e) {
+      toast('Failed to load appointments: ' + e.message, false);
+    }
+  }
+
   async function createAppointment() {
     const scheduleId = Number(document.getElementById('aScheduleId').value);
     const patientId = Number(document.getElementById('aPatientId').value);
@@ -467,10 +480,10 @@
       return;
     }
 
-    const payload = { scheduleId, patientId, appointmentDate, startTime, endTime, status };
+    const payload = { appointmentDate, startTime, endTime };
 
     try {
-      const res = await fetch(API_APPOINTMENT + '/appointments/' + appointmentId, {
+      const res = await fetch(API_APPOINTMENT + '/appointments/' + appointmentId + '/datetime', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -482,7 +495,7 @@
       }
 
       const data = await res.json();
-      upsertAppointment({ ...payload, ...data, appointmentId });
+      upsertAppointment({ ...data, appointmentId, scheduleId, patientId, status });
       closeModal('ov-edit-app');
       updateStats();
       renderAppointments();
@@ -591,8 +604,7 @@
   }
 
   checkHealth();
-  updateStats();
-  renderAppointments();
+  loadAppointments();
 </script>
 </body>
 </html>
