@@ -1,4 +1,4 @@
-﻿package com.example.appointment_service;
+package com.example.appointment_service;
 
 import com.example.appointment_service.controller.AppointmentController;
 import com.example.appointment_service.exception.ResourceNotFoundException;
