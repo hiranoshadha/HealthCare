@@ -119,7 +119,7 @@
     <div class="card" style="margin-top:20px;">
       <h2 style="margin-bottom:12px;">Existing Schedules</h2>
       <div class="table-wrap"><table id="scheduleTable"><thead><tr>
-        <th>ID</th><th>Doctor</th><th>Hospital</th><th>Day</th><th>Start</th><th>End</th><th>Slot</th><th>Actions</th>
+        <th>ID</th><th>Doctor</th><th>Hospital</th><th>Day</th><th>Start</th><th>End</th><th>Slot (min)</th><th>Total</th><th>Booked</th><th>Remaining</th><th>Actions</th>
       </tr></thead><tbody></tbody></table></div>
     </div>
   </main>
@@ -250,11 +250,28 @@
     }
   }
 
+  async function fetchSlotInfo(scheduleId) {
+    try {
+      const [totalRes, bookedRes, remainingRes] = await Promise.all([
+        fetch(`${API_DOCTOR}/api/schedules/${scheduleId}/slots/total`),
+        fetch(`${API_DOCTOR}/api/schedules/${scheduleId}/slots/booked`),
+        fetch(`${API_DOCTOR}/api/schedules/${scheduleId}/slots/remaining`)
+      ]);
+      const total     = totalRes.ok     ? await totalRes.json()     : '-';
+      const booked    = bookedRes.ok    ? await bookedRes.json()    : '-';
+      const remaining = remainingRes.ok ? await remainingRes.json() : '-';
+      return { total, booked, remaining };
+    } catch {
+      return { total: '-', booked: '-', remaining: '-' };
+    }
+  }
+
   async function renderSchedules(schedules) {
     const tbody = document.querySelector('#scheduleTable tbody');
     tbody.innerHTML = '';
     const doctorId = auth.user.doctorId;
-    schedules.forEach(s => {
+
+    for (const s of schedules) {
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${s.scheduleId}</td>
@@ -264,10 +281,21 @@
         <td>${s.startTime}</td>
         <td>${s.endTime}</td>
         <td>${s.slotDuration}</td>
+        <td id="total-${s.scheduleId}">...</td>
+        <td id="booked-${s.scheduleId}">...</td>
+        <td id="remaining-${s.scheduleId}" style="font-weight:600;color:var(--success)">...</td>
         <td><button class="form-button btn-danger" ${s.doctorId !== doctorId ? 'disabled' : ''} onclick="deleteSchedule(${s.scheduleId})">Delete</button></td>
       `;
       tbody.appendChild(row);
-    });
+
+      fetchSlotInfo(s.scheduleId).then(({ total, booked, remaining }) => {
+        document.getElementById(`total-${s.scheduleId}`).textContent = total;
+        document.getElementById(`booked-${s.scheduleId}`).textContent = booked;
+        const el = document.getElementById(`remaining-${s.scheduleId}`);
+        el.textContent = remaining;
+        el.style.color = remaining === 0 ? 'var(--danger)' : 'var(--success)';
+      });
+    }
   }
 
   async function createSchedule() {
