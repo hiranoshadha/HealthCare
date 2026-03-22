@@ -1,90 +1,71 @@
 package com.example.doctor_service.controller;
 
-import com.example.doctor_service.dto.RemainingSlotsResponse;
 import com.example.doctor_service.model.DoctorSchedule;
 import com.example.doctor_service.service.DoctorScheduleService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.DayOfWeek;
 import java.util.List;
 
 @RestController
-@RequestMapping("/schedules")
+@RequestMapping("/api/schedules")
+@RequiredArgsConstructor
 public class DoctorScheduleController {
 
-    @Autowired
-    private DoctorScheduleService service;
+    private final DoctorScheduleService doctorScheduleService;
 
-    // Create new schedule
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody DoctorSchedule schedule) {
-        try {
-            DoctorSchedule saved = service.createSchedule(schedule);
-            return ResponseEntity.ok(saved);
-        } catch (ResponseStatusException e) {
-            String message = e.getReason() == null ? "Unable to create schedule" : e.getReason();
-            return ResponseEntity.status(e.getStatusCode()).body(message);
-        }
+    public ResponseEntity<DoctorSchedule> createSchedule(@RequestBody DoctorSchedule schedule) {
+        return new ResponseEntity<>(doctorScheduleService.createSchedule(schedule), HttpStatus.CREATED);
     }
 
-    // Get schedule by ID
-    @GetMapping("/{id}")
-    public ResponseEntity<DoctorSchedule> get(@PathVariable Long id) {
-        DoctorSchedule schedule = service.getSchedule(id);
-        if (schedule != null) {
-            return ResponseEntity.ok(schedule);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    @GetMapping("/{scheduleId}")
+    public ResponseEntity<DoctorSchedule> getScheduleById(@PathVariable Long scheduleId) {
+        return ResponseEntity.ok(doctorScheduleService.getScheduleById(scheduleId));
     }
 
     @GetMapping
-    public ResponseEntity<List<DoctorSchedule>> getAll() {
-        return ResponseEntity.ok(service.getAllSchedules());
+    public ResponseEntity<List<DoctorSchedule>> getAllSchedules() {
+        return ResponseEntity.ok(doctorScheduleService.getAllSchedules());
     }
 
-    // Optional: Get all schedules for a doctor
     @GetMapping("/doctor/{doctorId}")
-    public ResponseEntity<List<DoctorSchedule>> getByDoctor(@PathVariable Long doctorId) {
-        List<DoctorSchedule> schedules = service.getSchedulesByDoctorId(doctorId);
-        return ResponseEntity.ok(schedules);
+    public ResponseEntity<List<DoctorSchedule>> getSchedulesByDoctorId(@PathVariable Long doctorId) {
+        return ResponseEntity.ok(doctorScheduleService.getSchedulesByDoctorId(doctorId));
     }
 
-    // Get all schedules for a hospital (used by Hospital Service)
     @GetMapping("/hospital/{hospitalId}")
-    public ResponseEntity<List<DoctorSchedule>> getByHospital(@PathVariable Long hospitalId) {
-        return ResponseEntity.ok(service.getSchedulesByHospitalId(hospitalId));
+    public ResponseEntity<List<DoctorSchedule>> getSchedulesByHospitalId(@PathVariable Long hospitalId) {
+        return ResponseEntity.ok(doctorScheduleService.getSchedulesByHospitalId(hospitalId));
     }
 
-    // Get remaining slots for a schedule
-    @GetMapping("/remaining/{scheduleId}")
-    public ResponseEntity<RemainingSlotsResponse> remaining(@PathVariable Long scheduleId) {
-        int remaining = service.remainingSlots(scheduleId);
-        return ResponseEntity.ok(new RemainingSlotsResponse(scheduleId, remaining));
+    @PatchMapping("/{scheduleId}/day")
+    public ResponseEntity<DoctorSchedule> updateScheduleDay(@PathVariable Long scheduleId,
+                                                            @RequestParam DayOfWeek dayOfWeek) {
+        return ResponseEntity.ok(doctorScheduleService.updateScheduleDay(scheduleId, dayOfWeek));
     }
 
-    @PatchMapping("/{id}/day")
-    public ResponseEntity<?> updateDay(@PathVariable Long id, @RequestParam DayOfWeek dayOfWeek) {
-        try {
-            DoctorSchedule updated = service.updateScheduleDay(id, dayOfWeek);
-            return ResponseEntity.ok(updated);
-        } catch (ResponseStatusException e) {
-            String message = e.getReason() == null ? "Unable to update schedule day" : e.getReason();
-            return ResponseEntity.status(e.getStatusCode()).body(message);
-        }
+    @DeleteMapping("/{scheduleId}")
+    public ResponseEntity<Void> deleteSchedule(@PathVariable Long scheduleId) {
+        doctorScheduleService.deleteSchedule(scheduleId);
+        return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
-        try {
-            service.deleteSchedule(id);
-            return ResponseEntity.noContent().build();
-        } catch (ResponseStatusException e) {
-            String message = e.getReason() == null ? "Unable to delete schedule" : e.getReason();
-            return ResponseEntity.status(e.getStatusCode()).body(message);
-        }
+    @GetMapping("/{scheduleId}/slots/total")
+    public ResponseEntity<Integer> getTotalSlots(@PathVariable Long scheduleId) {
+        return ResponseEntity.ok(doctorScheduleService.calculateTotalSlots(scheduleId));
+    }
+
+    @GetMapping("/{scheduleId}/slots/booked")
+    public ResponseEntity<Long> getBookedSlots(@PathVariable Long scheduleId) {
+        return ResponseEntity.ok(doctorScheduleService.getBookedSlots(scheduleId));
+    }
+
+    @GetMapping("/{scheduleId}/slots/remaining")
+    public ResponseEntity<Integer> getRemainingSlots(@PathVariable Long scheduleId) {
+        return ResponseEntity.ok(doctorScheduleService.getRemainingSlots(scheduleId));
     }
 }
