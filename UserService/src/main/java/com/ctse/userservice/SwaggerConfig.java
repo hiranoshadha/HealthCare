@@ -8,14 +8,6 @@ import org.springframework.context.annotation.Configuration;
 public class SwaggerConfig {
 
     @Bean
-    public GroupedOpenApi publicApi() {
-        return GroupedOpenApi.builder()
-                .group("public")
-                .pathsToMatch("/api/**")
-                .build();
-    }
-
-    @Bean
     public GroupedOpenApi patientApi() {
         return GroupedOpenApi.builder()
                 .group("patients")
