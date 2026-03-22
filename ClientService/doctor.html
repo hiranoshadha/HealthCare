@@ -156,13 +156,55 @@
     .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
     .hcard {
       background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 22px;
-      position: relative; overflow: hidden; transition: all .3s;
+      position: relative; overflow: visible; transition: all .3s;
     }
     .hcard:hover { border-color: rgba(14,165,233,.35); transform: translateY(-5px); box-shadow: 0 16px 48px rgba(0,0,0,.35); }
     .hcard-name { font-size: 16px; font-weight: 700; margin-bottom: 3px; }
     .hcard-id { font-size: 11px; color: var(--text-dim); margin-bottom: 14px; }
     .info-line { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.4; }
     .info-line .ico { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
+    .slot-summary-card {
+      background: rgba(0,0,0,.35);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-top: 10px;
+      margin-bottom: 6px;
+      font-size: 12.5px;
+      color: #d9e8f6;
+      line-height: 1.45;
+    }
+    .slot-summary-title {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-bottom: 6px;
+    }
+    .slot-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .slot-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .slot-badge.booked {
+      background: rgba(245, 158, 11, .14);
+      color: #ffd99a;
+      border: 1px solid rgba(245, 158, 11, .4);
+    }
+    .slot-badge.remaining {
+      background: rgba(16, 185, 129, .14);
+      color: #9cf7d4;
+      border: 1px solid rgba(16, 185, 129, .4);
+    }
     .hcard-footer { display: flex; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
 
     .table-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
@@ -345,25 +387,12 @@
       <button class="close-btn" onclick="closeModal('ov-edit')">✕</button>
     </div>
     <div class="modal-body">
-      <div class="frow">
-        <div class="fg"><label class="flabel">Schedule ID</label><input id="eScheduleId" class="finput" type="number" readonly /></div>
-        <div class="fg"><label class="flabel">Doctor ID *</label><input id="eDoctorId" class="finput" type="number" min="1" /></div>
-      </div>
-      <div class="frow">
-        <div class="fg"><label class="flabel">Hospital ID *</label><input id="eHospitalId" class="finput" type="number" min="1" /></div>
-        <div class="fg">
-          <label class="flabel">Day Of Week *</label>
-          <select id="eDay" class="finput">
-            <option>MONDAY</option><option>TUESDAY</option><option>WEDNESDAY</option><option>THURSDAY</option><option>FRIDAY</option><option>SATURDAY</option><option>SUNDAY</option>
-          </select>
-        </div>
-      </div>
-      <div class="frow">
-        <div class="fg"><label class="flabel">Slot Duration (mins) *</label><input id="eDuration" class="finput" type="number" min="5" /></div>
-        <div class="fg"><label class="flabel">Start Time *</label><input id="eStart" class="finput" type="time" /></div>
-      </div>
-      <div class="frow">
-        <div class="fg"><label class="flabel">End Time *</label><input id="eEnd" class="finput" type="time" /></div>
+      <div class="fg"><label class="flabel">Schedule ID</label><input id="eScheduleId" class="finput" type="number" readonly /></div>
+      <div class="fg">
+        <label class="flabel">Day Of Week *</label>
+        <select id="eDay" class="finput">
+          <option>MONDAY</option><option>TUESDAY</option><option>WEDNESDAY</option><option>THURSDAY</option><option>FRIDAY</option><option>SATURDAY</option><option>SUNDAY</option>
+        </select>
       </div>
     </div>
     <div class="modal-foot">
@@ -380,6 +409,7 @@
   const API_USEr = 'http://localhost:8083';
   let loadedSchedules = [];
   let currentView = 'grid';
+  const remainingBySchedule = new Map();
 
   function esc(s) {
     if (s === null || s === undefined) return '';
@@ -417,12 +447,11 @@
   }
 
   function clearLoaded() {
-    loadedSchedules = [];
     document.getElementById('dayInput').value = '';
     document.getElementById('doctorIdInput').value = '';
     document.getElementById('scheduleIdInput').value = '';
     document.getElementById('globalSearch').value = '';
-    render([]);
+    applyFilters();
   }
 
   function mergeSchedules(incoming) {
@@ -467,37 +496,17 @@
   }
 
   async function runFilters() {
-    const doctorId = document.getElementById('doctorIdInput').value.trim();
-    const scheduleId = document.getElementById('scheduleIdInput').value.trim();
-
-    if (doctorId) {
-      try {
-        const res = await fetch(API_DOCTOR + '/schedules/doctor/' + doctorId);
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        mergeSchedules(Array.isArray(data) ? data : []);
-      } catch (e) {
-        toast('Failed to load by doctor: ' + e.message, false);
-      }
-    }
-
-    if (scheduleId) {
-      try {
-        const res = await fetch(API_DOCTOR + '/schedules/' + scheduleId);
-        if (res.status === 404) {
-          toast('Schedule not found', false);
-        } else if (!res.ok) {
-          throw new Error('HTTP ' + res.status);
-        } else {
-          const data = await res.json();
-          mergeSchedules([data]);
-        }
-      } catch (e) {
-        toast('Failed to load by schedule: ' + e.message, false);
-      }
-    }
-
     applyFilters();
+  }
+
+  function calculateTotalSlots(startTime, endTime, slotDuration) {
+    if (!startTime || !endTime || !slotDuration) return 0;
+    const [startH, startM] = startTime.split(':').map(Number);
+    const [endH, endM] = endTime.split(':').map(Number);
+    const startMinutes = startH * 60 + startM;
+    const endMinutes = endH * 60 + endM;
+    const durationMinutes = endMinutes - startMinutes;
+    return durationMinutes > 0 ? Math.floor(durationMinutes / slotDuration) : 0;
   }
 
   async function getRemaining(scheduleId) {
@@ -505,9 +514,42 @@
       const res = await fetch(API_DOCTOR + '/schedules/remaining/' + scheduleId);
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
-      toast('Schedule ' + scheduleId + ' remaining slots: ' + data.remainingSlots);
+      remainingBySchedule.set(scheduleId, data.remainingSlots);
+      applyFilters();
     } catch (e) {
       toast('Could not fetch remaining slots: ' + e.message, false);
+    }
+  }
+
+  async function refreshRemainingForLoadedSchedules() {
+    const ids = loadedSchedules.map(s => s.scheduleId).filter(Boolean);
+    if (!ids.length) return;
+
+    await Promise.all(ids.map(async (id) => {
+      try {
+        const res = await fetch(API_DOCTOR + '/schedules/remaining/' + id);
+        if (!res.ok) return;
+        const data = await res.json();
+        remainingBySchedule.set(id, data.remainingSlots);
+      } catch (e) {
+      }
+    }));
+
+    applyFilters();
+  }
+
+  async function loadAllSchedules() {
+    try {
+      const res = await fetch(API_DOCTOR + '/schedules');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      loadedSchedules = Array.isArray(data) ? data : [];
+      applyFilters();
+      await refreshRemainingForLoadedSchedules();
+      toast('Loaded all schedules');
+    } catch (e) {
+      toast('Failed to load schedules: ' + e.message, false);
+      render([]);
     }
   }
 
@@ -570,43 +612,29 @@
       return;
     }
     document.getElementById('eScheduleId').value = current.scheduleId;
-    document.getElementById('eDoctorId').value = current.doctorId ?? '';
-    document.getElementById('eHospitalId').value = current.hospitalId ?? '';
     document.getElementById('eDay').value = current.dayOfWeek ?? 'MONDAY';
-    document.getElementById('eDuration').value = current.slotDuration ?? '';
-    document.getElementById('eStart').value = current.startTime ?? '';
-    document.getElementById('eEnd').value = current.endTime ?? '';
     openModal('ov-edit');
   }
 
   async function updateSchedule() {
     const scheduleId = Number(document.getElementById('eScheduleId').value);
-    const doctorId = Number(document.getElementById('eDoctorId').value);
-    const hospitalId = Number(document.getElementById('eHospitalId').value);
     const dayOfWeek = document.getElementById('eDay').value;
-    const slotDuration = Number(document.getElementById('eDuration').value);
-    const startTime = document.getElementById('eStart').value;
-    const endTime = document.getElementById('eEnd').value;
 
-    if (!scheduleId || !doctorId || !hospitalId || !slotDuration || !startTime || !endTime) {
-      toast('Please complete all required fields', false);
+    if (!scheduleId || !dayOfWeek) {
+      toast('Schedule ID and day are required', false);
       return;
     }
 
-    const payload = { doctorId, hospitalId, dayOfWeek, startTime, endTime, slotDuration };
-
     try {
-      const res = await fetch(API_DOCTOR + '/schedules/' + scheduleId, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+      const res = await fetch(API_DOCTOR + '/schedules/' + scheduleId + '/day?dayOfWeek=' + encodeURIComponent(dayOfWeek), {
+        method: 'PATCH'
       });
       if (!res.ok) throw new Error(await res.text() || ('HTTP ' + res.status));
       const updated = await res.json();
       mergeSchedules([updated]);
       applyFilters();
       closeModal('ov-edit');
-      toast('Schedule updated: ' + scheduleId);
+      toast('Schedule day updated: ' + scheduleId);
     } catch (e) {
       toast('Update failed: ' + e.message, false);
     }
@@ -643,29 +671,40 @@
 
     if (currentView === 'table') {
       document.getElementById('scheduleArea').innerHTML =
-        '<div class="table-wrap"><table><thead><tr><th>Schedule</th><th>Doctor</th><th>Hospital</th><th>Day</th><th>Time</th><th>Duration</th><th>Actions</th></tr></thead><tbody>' +
-        list.map(s => '<tr><td><strong>SCH-' + String(s.scheduleId).padStart(4, '0') + '</strong></td><td>' + esc(s.doctorId) + '</td><td>' + esc(s.hospitalId) + '</td><td>' + esc(s.dayOfWeek) + '</td><td>' + esc(s.startTime) + ' - ' + esc(s.endTime) + '</td><td>' + esc(s.slotDuration) + ' min</td><td><button class="btn btn-ghost btn-sm" onclick="getRemaining(' + s.scheduleId + ')">Remaining</button> <button class="btn btn-ghost btn-sm" onclick="openEditSchedule(' + s.scheduleId + ')">Update</button> <button class="btn btn-danger btn-sm" onclick="deleteSchedule(' + s.scheduleId + ')">Delete</button></td></tr>').join('') +
+        '<div class="table-wrap"><table><thead><tr><th>Schedule</th><th>Doctor</th><th>Hospital</th><th>Day</th><th>Time</th><th>Duration</th><th>Total Slots</th><th>Remaining</th><th>Actions</th></tr></thead><tbody>' +
+        list.map(s => {
+          const totalSlots = calculateTotalSlots(s.startTime, s.endTime, s.slotDuration);
+          const remaining = remainingBySchedule.has(s.scheduleId) ? remainingBySchedule.get(s.scheduleId) : '...';
+          return '<tr><td><strong>SCH-' + String(s.scheduleId).padStart(4, '0') + '</strong></td><td>' + esc(s.doctorId) + '</td><td>' + esc(s.hospitalId) + '</td><td>' + esc(s.dayOfWeek) + '</td><td>' + esc(s.startTime) + ' - ' + esc(s.endTime) + '</td><td>' + esc(s.slotDuration) + ' min</td><td><strong>' + totalSlots + '</strong></td><td><strong>' + remaining + '</strong></td><td><button class="btn btn-ghost btn-sm" onclick="getRemaining(' + s.scheduleId + ')">Fetch</button> <button class="btn btn-ghost btn-sm" onclick="openEditSchedule(' + s.scheduleId + ')">Update</button> <button class="btn btn-danger btn-sm" onclick="deleteSchedule(' + s.scheduleId + ')">Delete</button></td></tr>';
+        }).join('') +
         '</tbody></table></div>';
       return;
     }
 
     document.getElementById('scheduleArea').innerHTML =
       '<div class="cards-grid">' +
-      list.map(s =>
-        '<div class="hcard">' +
+      list.map(s => {
+        const totalSlots = calculateTotalSlots(s.startTime, s.endTime, s.slotDuration);
+        const remaining = remainingBySchedule.has(s.scheduleId) ? remainingBySchedule.get(s.scheduleId) : '...';
+        const booked = remaining !== '...' ? totalSlots - remaining : '...';
+        return '<div class="hcard">' +
           '<div class="hcard-name">Schedule SCH-' + String(s.scheduleId).padStart(4, '0') + '</div>' +
           '<div class="hcard-id">Doctor ' + esc(s.doctorId) + ' • Hospital ' + esc(s.hospitalId) + '</div>' +
           '<div class="info-line"><span class="ico">📆</span>' + esc(s.dayOfWeek) + '</div>' +
           '<div class="info-line"><span class="ico">🕒</span>' + esc(s.startTime) + ' - ' + esc(s.endTime) + '</div>' +
           '<div class="info-line"><span class="ico">⏱️</span>' + esc(s.slotDuration) + ' minutes</div>' +
-          '<div class="hcard-footer"><button class="btn btn-ghost btn-sm" onclick="getRemaining(' + s.scheduleId + ')">Check Remaining Slots</button><button class="btn btn-ghost btn-sm" onclick="openEditSchedule(' + s.scheduleId + ')">Update</button><button class="btn btn-danger btn-sm" onclick="deleteSchedule(' + s.scheduleId + ')">Delete</button></div>' +
-        '</div>'
-      ).join('') +
+          '<div class="info-line"><span class="ico">📊</span>Total Slots: <strong>' + totalSlots + '</strong></div>' +
+          '<div class="info-line" style="color: #10b981; font-weight: 600;"><span class="ico">🎟️</span>Available Now: <strong>' + remaining + '</strong></div>' +
+          '<div class="slot-summary-card"><div class="slot-summary-title">Slot Status</div><div class="slot-badges"><span class="slot-badge booked">Booked: ' + booked + '</span><span class="slot-badge remaining">Remaining: ' + remaining + '</span></div></div>' +
+          '<div class="hcard-footer"><button class="btn btn-ghost btn-sm" onclick="getRemaining(' + s.scheduleId + ')">Remaining Slots</button><button class="btn btn-ghost btn-sm" onclick="openEditSchedule(' + s.scheduleId + ')">Update</button><button class="btn btn-danger btn-sm" onclick="deleteSchedule(' + s.scheduleId + ')">Delete</button></div>' +
+        '</div>';
+      }).join('') +
       '</div>';
   }
 
   checkHealth();
-  render([]);
+  loadAllSchedules();
+  setInterval(refreshRemainingForLoadedSchedules, 10000);
 </script>
 </body>
 </html>
