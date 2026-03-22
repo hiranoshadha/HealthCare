@@ -13,10 +13,10 @@ RUN rm -rf ./*
 # Copy static files
 COPY --from=build /app/Index.html ./index.html
 COPY --from=build /app/hospital.html ./hospital.html
-COPY --from=build /app/hospital.html ./login.html
-COPY --from=build /app/hospital.html ./patient-signup.html
-COPY --from=build /app/hospital.html ./user-profile.html
-COPY --from=build /app/hospital.html ./doctor-registration.html
+COPY --from=build /app/login.html ./login.html
+COPY --from=build /app/patient-signup.html ./patient-signup.html
+COPY --from=build /app/user-profile.html ./user-profile.html
+COPY --from=build /app/doctor-registration.html ./doctor-registration.html
 
 
 # Copy nginx config template
