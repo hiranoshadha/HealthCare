@@ -546,7 +546,6 @@
 
 <script>
   const API_HOSPITAL = 'https://hospitalservice-633n.onrender.com';
-  const API_USER     = 'http://localhost:8081';
 
   let allHospitals = [];
   let editingId = null;
@@ -776,13 +775,13 @@
         const name = (d.firstName || d.lastName)
           ? `Dr. ${esc(d.firstName || '')} ${esc(d.lastName || '')}`.trim()
           : `Doctor ID: ${esc(String(d.doctorId))}`;
-        const spec = d.specialization ? esc(d.specialization) : `ID: ${esc(String(d.doctorId))}`;
+        const spec = d.specialization ? esc(d.specialization) : '';
         return `
         <div class="doc-item">
           <div class="doc-avatar">👨‍⚕️</div>
           <div>
             <div class="doc-name">${name}</div>
-            <div class="doc-spec" style="color:var(--accent);font-weight:600">${spec}</div>
+            ${spec ? `<div class="doc-spec" style="color:var(--accent);font-weight:600">${spec}</div>` : ''}
             <div class="doc-spec">${esc(d.dayOfWeek)} &nbsp;|&nbsp; ${esc(d.startTime)} – ${esc(d.endTime)}</div>
             <div class="doc-spec">Slot Duration: ${esc(String(d.slotDuration))} mins</div>
           </div>
