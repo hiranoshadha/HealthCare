@@ -1,6 +1,7 @@
-package com.ctse.userservice.service.serviceImpl;
+package com.ctse.userservice.service.serviceimpl;
 
 import com.ctse.userservice.dto.*;
+import com.ctse.userservice.exception.ResourceNotFoundException;
 import com.ctse.userservice.model.Doctor;
 import com.ctse.userservice.model.Patient;
 import com.ctse.userservice.model.User;
@@ -15,12 +16,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class UserServiceImpl implements UserService {
+
+    private static final String PATIENT_NOT_FOUND = "Patient not found";
+    private static final String DOCTOR_NOT_FOUND = "Doctor not found";
+    private static final String ROLE_PATIENT = "PATIENT";
+    private static final String ROLE_DOCTOR = "DOCTOR";
 
     private final UserRepository userRepository;
     private final PatientRepository patientRepository;
@@ -30,7 +35,7 @@ public class UserServiceImpl implements UserService {
 
     private User createUser(String username, String password, String role) {
         if (userRepository.existsByUsername(username)) {
-            throw new RuntimeException("Username already exists");
+            throw new IllegalStateException("Username already exists");
         }
 
         User user = new User();
@@ -87,32 +92,31 @@ public class UserServiceImpl implements UserService {
     @Override
     public Object login(String userName, String password) {
         User user = userRepository.findByUsername(userName)
-                .orElseThrow(() -> new RuntimeException("Invalid username or password"));
+                .orElseThrow(() -> new ResourceNotFoundException("Invalid username or password"));
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new RuntimeException("Invalid username or password");
+            throw new ResourceNotFoundException("Invalid username or password");
         }
 
         String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
 
-        if ("PATIENT".equals(user.getRole())) {
+        if (ROLE_PATIENT.equals(user.getRole())) {
             Patient patient = patientRepository.findByUserId(user.getUserId())
-                    .orElseThrow(() -> new RuntimeException("Patient profile not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Patient profile not found"));
             PatientDTO patientDTO = mapToPatientDTO(patient);
-            return new LoginResponseDTO(token, patientDTO, "PATIENT");
-        } else if ("DOCTOR".equals(user.getRole())) {
+            return new LoginResponseDTO(token, patientDTO, ROLE_PATIENT);
+        } else if (ROLE_DOCTOR.equals(user.getRole())) {
             Doctor doctor = doctorRepository.findByUserId(user.getUserId())
-                    .orElseThrow(() -> new RuntimeException("Doctor profile not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Doctor profile not found"));
             DoctorDTO doctorDTO = mapToDoctorDTO(doctor);
-            return new LoginResponseDTO(token, doctorDTO, "DOCTOR");
+            return new LoginResponseDTO(token, doctorDTO, ROLE_DOCTOR);
         } else if ("ADMIN".equals(user.getRole())) {
-            // Admin users don't have a separate profile, return basic user data
             AdminDTO adminDTO = new AdminDTO();
             adminDTO.setUserId(user.getUserId());
             adminDTO.setUsername(user.getUsername());
             return new LoginResponseDTO(token, adminDTO, "ADMIN");
         } else {
-            throw new RuntimeException("Invalid user role");
+            throw new IllegalStateException("Invalid user role");
         }
     }
 
@@ -120,7 +124,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public PatientDTO createPatient(PatientDTO patientDTO, String password) {
         // Create user first
-        User savedUser = createUser(patientDTO.getUsername(), password, "PATIENT");
+        User savedUser = createUser(patientDTO.getUsername(), password, ROLE_PATIENT);
 
         // Create patient
         Patient patient = new Patient();
@@ -144,14 +148,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public PatientDTO getPatientById(Long patientId) {
         Patient patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(PATIENT_NOT_FOUND));
         return mapToPatientDTO(patient);
     }
 
     @Override
     public PatientDTO getPatientByUserId(Long userId) {
         Patient patient = patientRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Patient not found for user id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException(PATIENT_NOT_FOUND + " for user id: " + userId));
         return mapToPatientDTO(patient);
     }
 
@@ -159,13 +163,13 @@ public class UserServiceImpl implements UserService {
     public List<PatientDTO> getAllPatients() {
         return patientRepository.findAll().stream()
                 .map(this::mapToPatientDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public PatientDTO updatePatient(Long patientId, PatientDTO patientDTO) {
         Patient patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(PATIENT_NOT_FOUND));
 
         patient.setFirstName(patientDTO.getFirstName());
         patient.setLastName(patientDTO.getLastName());
@@ -182,7 +186,7 @@ public class UserServiceImpl implements UserService {
         // Update username if provided
         if (patientDTO.getUsername() != null && patient.getUserId() != null) {
             User user = userRepository.findById(patient.getUserId())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
             user.setUsername(patientDTO.getUsername());
             userRepository.save(user);
         }
@@ -194,7 +198,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deletePatient(Long patientId) {
         Patient patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(PATIENT_NOT_FOUND));
 
         patientRepository.deleteById(patientId);
 
@@ -208,7 +212,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public DoctorDTO createDoctor(DoctorDTO doctorDTO, String password) {
         // Create user first
-        User savedUser = createUser(doctorDTO.getUsername(), password, "DOCTOR");
+        User savedUser = createUser(doctorDTO.getUsername(), password, ROLE_DOCTOR);
 
         // Create doctor
         Doctor doctor = new Doctor();
@@ -227,14 +231,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public DoctorDTO getDoctorById(Long doctorId) {
         Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(DOCTOR_NOT_FOUND));
         return mapToDoctorDTO(doctor);
     }
 
     @Override
     public DoctorDTO getDoctorByUserId(Long userId) {
         Doctor doctor = doctorRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Doctor not found for user id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException(DOCTOR_NOT_FOUND + " for user id: " + userId));
         return mapToDoctorDTO(doctor);
     }
 
@@ -242,13 +246,13 @@ public class UserServiceImpl implements UserService {
     public List<DoctorDTO> getAllDoctors() {
         return doctorRepository.findAll().stream()
                 .map(this::mapToDoctorDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public DoctorDTO updateDoctor(Long doctorId, DoctorDTO doctorDTO) {
         Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(DOCTOR_NOT_FOUND));
 
         doctor.setFirstName(doctorDTO.getFirstName());
         doctor.setLastName(doctorDTO.getLastName());
@@ -260,7 +264,7 @@ public class UserServiceImpl implements UserService {
         // Update username if provided
         if (doctorDTO.getUsername() != null && doctor.getUserId() != null) {
             User user = userRepository.findById(doctor.getUserId())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
             user.setUsername(doctorDTO.getUsername());
             userRepository.save(user);
         }
@@ -272,7 +276,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteDoctor(Long doctorId) {
         Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(DOCTOR_NOT_FOUND));
 
         doctorRepository.deleteById(doctorId);
 

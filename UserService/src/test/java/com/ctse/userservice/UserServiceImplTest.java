@@ -9,7 +9,7 @@ import com.ctse.userservice.repository.DoctorRepository;
 import com.ctse.userservice.repository.PatientRepository;
 import com.ctse.userservice.repository.UserRepository;
 import com.ctse.userservice.security.JwtUtil;
-import com.ctse.userservice.service.serviceImpl.UserServiceImpl;
+import com.ctse.userservice.service.serviceimpl.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
