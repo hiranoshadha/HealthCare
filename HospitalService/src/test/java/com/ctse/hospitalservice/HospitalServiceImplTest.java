@@ -209,10 +209,42 @@ class HospitalServiceImplTest {
     }
 
     @Test
+    void getHospitalWithDoctors_enrichesDoctorInfo() {
+        DoctorScheduleDTO schedule = new DoctorScheduleDTO();
+        schedule.setDoctorId(1L);
+        schedule.setHospitalId(1L);
+        schedule.setDayOfWeek("FRIDAY");
+
+        com.ctse.hospitalservice.dto.DoctorInfoDTO doctorInfo =
+                new com.ctse.hospitalservice.dto.DoctorInfoDTO(
+                        1L, "Ishan", "Madusanka", "Dermatology", "LIC123", "ishan@h.com", "077", 2L);
+
+        when(hospitalRepository.findById(1L)).thenReturn(Optional.of(hospital));
+        when(doctorServiceClient.getSchedulesByHospitalId(1L)).thenReturn(List.of(schedule));
+        when(userServiceClient.getAllDoctors()).thenReturn(List.of(doctorInfo));
+
+        HospitalWithDoctorsDTO result = hospitalService.getHospitalWithDoctors(1L);
+
+        assertThat(result.getDoctors()).hasSize(1);
+        assertThat(result.getDoctors().get(0).getFirstName()).isEqualTo("Ishan");
+        assertThat(result.getDoctors().get(0).getLastName()).isEqualTo("Madusanka");
+        assertThat(result.getDoctors().get(0).getSpecialization()).isEqualTo("Dermatology");
+    }
+
+    @Test
     void getHospitalWithDoctors_hospitalNotFound_throwsResourceNotFoundException() {
         when(hospitalRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> hospitalService.getHospitalWithDoctors(99L))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void getHospitalsByCity_emptyResult_returnsEmptyList() {
+        when(hospitalRepository.findByCity("Nowhere")).thenReturn(List.of());
+
+        List<HospitalDTO> result = hospitalService.getHospitalsByCity("Nowhere");
+
+        assertThat(result).isEmpty();
     }
 }
