@@ -1,4 +1,4 @@
-﻿package com.example.doctor_service;
+package com.example.doctor_service;
 
 import com.example.doctor_service.controller.DoctorScheduleController;
 import com.example.doctor_service.exception.ResourceNotFoundException;

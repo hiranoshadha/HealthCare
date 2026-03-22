@@ -1,6 +1,5 @@
 package com.example.doctor_service;
 
-import com.example.doctor_service.exception.ResourceNotFoundException;
 import com.example.doctor_service.model.DoctorSchedule;
 import com.example.doctor_service.repository.DoctorScheduleRepository;
 import com.example.doctor_service.service.serviceImpl.DoctorScheduleServiceImpl;
@@ -11,6 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -19,6 +19,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -76,9 +78,6 @@ class DoctorScheduleServiceImplTest {
         invalidSchedule.setEndTime(LocalTime.of(9, 0)); // End before start
         invalidSchedule.setSlotDuration(30);
 
-        when(restTemplate.getForObject(contains("/doctors/1"), any()))
-                .thenReturn(new Object());
-
         assertThatThrownBy(() -> doctorScheduleService.createSchedule(invalidSchedule))
                 .isInstanceOf(Exception.class);
 
@@ -98,11 +97,11 @@ class DoctorScheduleServiceImplTest {
     }
 
     @Test
-    void getScheduleById_notFound_throwsResourceNotFoundException() {
+    void getScheduleById_notFound_throwsException() {
         when(doctorScheduleRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> doctorScheduleService.getScheduleById(99L))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(ResponseStatusException.class);
     }
 
     // ---- getAllSchedules ----
@@ -182,11 +181,11 @@ class DoctorScheduleServiceImplTest {
     }
 
     @Test
-    void updateScheduleDay_notFound_throwsResourceNotFoundException() {
+    void updateScheduleDay_notFound_throwsException() {
         when(doctorScheduleRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> doctorScheduleService.updateScheduleDay(99L, DayOfWeek.WEDNESDAY))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(ResponseStatusException.class);
     }
 
     // ---- deleteSchedule ----
@@ -201,11 +200,11 @@ class DoctorScheduleServiceImplTest {
     }
 
     @Test
-    void deleteSchedule_notFound_throwsResourceNotFoundException() {
+    void deleteSchedule_notFound_throwsException() {
         when(doctorScheduleRepository.existsById(99L)).thenReturn(false);
 
         assertThatThrownBy(() -> doctorScheduleService.deleteSchedule(99L))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(ResponseStatusException.class);
 
         verify(doctorScheduleRepository, never()).deleteById(any());
     }
@@ -223,11 +222,11 @@ class DoctorScheduleServiceImplTest {
     }
 
     @Test
-    void calculateTotalSlots_notFound_throwsResourceNotFoundException() {
+    void calculateTotalSlots_notFound_throwsException() {
         when(doctorScheduleRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> doctorScheduleService.calculateTotalSlots(99L))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(ResponseStatusException.class);
     }
 
     // ---- getBookedSlots ----
@@ -255,10 +254,10 @@ class DoctorScheduleServiceImplTest {
     }
 
     @Test
-    void getRemainingSlots_notFound_throwsResourceNotFoundException() {
+    void getRemainingSlots_notFound_throwsException() {
         when(doctorScheduleRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> doctorScheduleService.getRemainingSlots(99L))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(ResponseStatusException.class);
     }
 }

@@ -1,4 +1,4 @@
-﻿package com.ctse.userservice;
+package com.ctse.userservice;
 
 import com.ctse.userservice.controller.UserController;
 import com.ctse.userservice.dto.DoctorDTO;
