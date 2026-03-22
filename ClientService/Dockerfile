@@ -17,7 +17,8 @@ COPY --from=build /app/login.html ./login.html
 COPY --from=build /app/patient-signup.html ./patient-signup.html
 COPY --from=build /app/user-profile.html ./user-profile.html
 COPY --from=build /app/doctor-registration.html ./doctor-registration.html
-
+COPY --from=build /app/doctor.html ./doctor.html
+COPY --from=build /app/appointment.html ./appointment.html
 
 # Copy nginx config template
 COPY nginx.conf /etc/nginx/templates/default.conf.template

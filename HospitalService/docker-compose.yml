@@ -10,6 +10,7 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - USER_SERVICE_URL=http://host.docker.internal:8081
+      - DOCTOR_SERVICE_URL=http://host.docker.internal:8083
     depends_on:
       db:
         condition: service_healthy

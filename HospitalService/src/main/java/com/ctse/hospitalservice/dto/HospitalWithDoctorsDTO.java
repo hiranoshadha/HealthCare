@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 /**
- * Combined response DTO: hospital details + list of doctors from User Service.
+ * Combined response DTO: hospital details + list of doctor schedules from Doctor Service.
  * Used for the inter-service communication endpoint.
  */
 @Data
@@ -20,5 +20,5 @@ public class HospitalWithDoctorsDTO {
     private String city;
     private String contactNumber;
     private String email;
-    private List<DoctorInfoDTO> doctors;
+    private List<DoctorScheduleDTO> doctors;
 }
