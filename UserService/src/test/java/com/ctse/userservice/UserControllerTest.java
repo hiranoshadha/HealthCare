@@ -70,8 +70,8 @@ class UserControllerTest {
         when(userService.login("johndoe", "wrongpassword"))
                 .thenThrow(new ResourceNotFoundException("Invalid username or password"));
 
-        LoginDTO loginDTO = new LoginDTO("johndoe", "wrongpassword");
-        assertThatThrownBy(() -> userController.login(loginDTO))
+        LoginDTO invalidCredentials = new LoginDTO("johndoe", "wrongpassword");
+        assertThatThrownBy(() -> userController.login(invalidCredentials))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Invalid username or password");
     }
