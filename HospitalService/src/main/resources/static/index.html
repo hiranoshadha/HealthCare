@@ -553,7 +553,7 @@
   <div class="modal">
     <div class="modal-head">
       <span class="modal-title" id="formTitle">Add Hospital</span>
-      <button class="close-btn" onclick="close('formOverlay')">✕</button>
+      <button class="close-btn" onclick="closeModal('formOverlay')">✕</button>
     </div>
     <div class="modal-body">
       <div class="frow">
@@ -585,7 +585,7 @@
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="close('formOverlay')">Cancel</button>
+      <button class="btn btn-ghost" onclick="closeModal('formOverlay')">Cancel</button>
       <button class="btn btn-primary" id="formBtn" onclick="submit()">
         <span id="formBtnLabel">Save Hospital</span>
       </button>
@@ -601,13 +601,13 @@
         <div class="modal-title" id="docsTitle">Doctors</div>
         <div style="font-size:12.5px;color:var(--text-muted);margin-top:3px" id="docsSub"></div>
       </div>
-      <button class="close-btn" onclick="close('docsOverlay')">✕</button>
+      <button class="close-btn" onclick="closeModal('docsOverlay')">✕</button>
     </div>
     <div class="modal-body">
       <div class="doc-list" id="docList"></div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="close('docsOverlay')">Close</button>
+      <button class="btn btn-ghost" onclick="closeModal('docsOverlay')">Close</button>
     </div>
   </div>
 </div>
@@ -625,7 +625,7 @@
       </p>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="close('delOverlay')">Cancel</button>
+      <button class="btn btn-ghost" onclick="closeModal('delOverlay')">Cancel</button>
       <button class="btn btn-danger-soft" id="delBtn" onclick="doDelete()">Delete</button>
     </div>
   </div>
@@ -721,10 +721,10 @@
           <div class="hcard" onclick="openDocs(${h.hospitalId},'${esc(h.name)}')">
             <div class="hcard-top">
               <div class="hcard-avatar">🏥</div>
-              <div class="hcard-actions" onclick="event.stopPropagation()">
-                <button class="icon-btn docs" title="View Doctors"  onclick="openDocs(${h.hospitalId},'${esc(h.name)}')">👨‍⚕️</button>
-                <button class="icon-btn edit" title="Edit Hospital"  onclick="openEdit(${h.hospitalId})">✏️</button>
-                <button class="icon-btn del"  title="Delete Hospital" onclick="openDel(${h.hospitalId},'${esc(h.name)}')">🗑️</button>
+              <div class="hcard-actions">
+                <button class="icon-btn docs" title="View Doctors"  onclick="event.stopPropagation(); openDocs(${h.hospitalId},'${esc(h.name)}')">👨‍⚕️</button>
+                <button class="icon-btn edit" title="Edit Hospital"  onclick="event.stopPropagation(); openEdit(${h.hospitalId})">✏️</button>
+                <button class="icon-btn del"  title="Delete Hospital" onclick="event.stopPropagation(); openDel(${h.hospitalId},'${esc(h.name)}')">🗑️</button>
               </div>
             </div>
             <div class="hcard-name">${esc(h.name)}</div>
@@ -755,7 +755,7 @@
     editId = null; clearForm();
     document.getElementById('formTitle').textContent = '🏥 Add Hospital';
     document.getElementById('formBtnLabel').textContent = 'Save Hospital';
-    open('formOverlay');
+    openModal('formOverlay');
   }
 
   function openEdit(id) {
@@ -769,7 +769,7 @@
     document.getElementById('f-email').value = h.email;
     document.getElementById('formTitle').textContent = '✏️ Edit Hospital';
     document.getElementById('formBtnLabel').textContent = 'Update Hospital';
-    open('formOverlay');
+    openModal('formOverlay');
   }
 
   async function submit() {
@@ -790,7 +790,7 @@
       });
       if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.message || 'Request failed'); }
       toast(editId ? 'Hospital updated successfully!' : 'Hospital added successfully!', 'ok');
-      close('formOverlay');
+      closeModal('formOverlay');
       await load();
     } catch (e) {
       toast(e.message || 'Something went wrong', 'bad');
@@ -804,7 +804,7 @@
   function openDel(id, name) {
     deleteId = id;
     document.getElementById('delName').textContent = name;
-    open('delOverlay');
+    openModal('delOverlay');
   }
 
   async function doDelete() {
@@ -813,7 +813,7 @@
       const r = await fetch(`${API}/${deleteId}`, { method: 'DELETE' });
       if (!r.ok) throw 0;
       toast('Hospital deleted', 'ok');
-      close('delOverlay');
+      closeModal('delOverlay');
       await load();
     } catch {
       toast('Failed to delete hospital', 'bad');
@@ -829,7 +829,7 @@
     document.getElementById('docsSub').textContent   = 'Fetching from User Service…';
     document.getElementById('docList').innerHTML     =
       '<div style="text-align:center;padding:24px;color:var(--text-muted)">⏳ Loading doctors…</div>';
-    open('docsOverlay');
+    openModal('docsOverlay');
     try {
       const r = await fetch(`${API}/${id}/doctors`);
       if (!r.ok) throw 0;
@@ -855,8 +855,8 @@
   }
 
   // ─── HELPERS ──────────────────────────────────────────────
-  function open(id)  { document.getElementById(id).classList.add('open'); }
-  function close(id) { document.getElementById(id).classList.remove('open'); }
+  function openModal(id)  { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
   function validate() {
     const checks = [
@@ -908,7 +908,7 @@
 
   // Close overlay on backdrop click
   document.querySelectorAll('.overlay').forEach(el =>
-    el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); }));
+    el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); }));
 </script>
 </body>
 </html>
