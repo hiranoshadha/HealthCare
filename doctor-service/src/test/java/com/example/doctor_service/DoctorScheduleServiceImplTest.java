@@ -2,7 +2,7 @@ package com.example.doctor_service;
 
 import com.example.doctor_service.model.DoctorSchedule;
 import com.example.doctor_service.repository.DoctorScheduleRepository;
-import com.example.doctor_service.service.serviceImpl.DoctorScheduleServiceImpl;
+import com.example.doctor_service.service.serviceimpl.DoctorScheduleServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
