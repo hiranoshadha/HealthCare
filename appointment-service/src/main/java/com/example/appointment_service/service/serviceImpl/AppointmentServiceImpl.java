@@ -1,10 +1,12 @@
-package com.example.appointment_service.service.serviceImpl;
+package com.example.appointment_service.service.serviceimpl;
 
 import com.example.appointment_service.model.Appointment;
 import com.example.appointment_service.repository.AppointmentRepository;
 import com.example.appointment_service.service.AppointmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -145,7 +147,9 @@ public class AppointmentServiceImpl implements AppointmentService {
     private Map<String, Object> fetchSchedule(Long scheduleId) {
         String url = doctorServiceUrl + "/api/schedules/" + scheduleId;
         try {
-            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                    url, HttpMethod.GET, null, new ParameterizedTypeReference<Map<String, Object>>() {}
+            );
 
             if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
                 throw new ResponseStatusException(
@@ -223,7 +227,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         for (DateTimeFormatter formatter : List.of(HH_MM_SS, HH_MM)) {
             try {
                 return LocalTime.parse(value, formatter);
-            } catch (DateTimeParseException ignored) {
+            } catch (DateTimeParseException e) {
+                // try next formatter
             }
         }
 

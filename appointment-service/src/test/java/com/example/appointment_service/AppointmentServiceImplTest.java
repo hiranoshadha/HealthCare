@@ -2,13 +2,17 @@ package com.example.appointment_service;
 
 import com.example.appointment_service.model.Appointment;
 import com.example.appointment_service.repository.AppointmentRepository;
-import com.example.appointment_service.service.serviceImpl.AppointmentServiceImpl;
+import com.example.appointment_service.service.serviceimpl.AppointmentServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
@@ -64,8 +68,9 @@ class AppointmentServiceImplTest {
         schedule.put("endTime", "17:00");
         schedule.put("slotDuration", 30);
 
-        ResponseEntity<Map> mockResponse = new ResponseEntity<>(schedule, HttpStatus.OK);
-        when(restTemplate.getForEntity(contains("/api/schedules/1"), eq(Map.class)))
+        ResponseEntity<Map<String, Object>> mockResponse = new ResponseEntity<>(schedule, HttpStatus.OK);
+        when(restTemplate.exchange(contains("/api/schedules/1"), eq(HttpMethod.GET), eq(null),
+                any(ParameterizedTypeReference.class)))
                 .thenReturn(mockResponse);
         when(appointmentRepository.findStartTimesByScheduleIdAndAppointmentDate(eq(1L), any(LocalDate.class)))
                 .thenReturn(List.of());
@@ -82,7 +87,8 @@ class AppointmentServiceImplTest {
 
     @Test
     void createAppointment_scheduleNotFound_throwsException() {
-        when(restTemplate.getForEntity(contains("/api/schedules/99"), eq(Map.class)))
+        when(restTemplate.exchange(contains("/api/schedules/99"), eq(HttpMethod.GET), eq(null),
+                any(ParameterizedTypeReference.class)))
                 .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule not found"));
 
         assertThatThrownBy(() -> appointmentService.createAppointment(99L, 1L))
@@ -207,30 +213,17 @@ class AppointmentServiceImplTest {
 
     // ---- countByScheduleId ----
 
-    @Test
-    void countByScheduleId_returnsCorrectCount() {
-        when(appointmentRepository.countByScheduleId(1L)).thenReturn(5L);
+    @ParameterizedTest
+    @ValueSource(longs = {0L, 5L, 10L})
+    void countByScheduleId_returnsCount(long count) {
+        when(appointmentRepository.countByScheduleId(1L)).thenReturn(count);
 
         long result = appointmentService.countByScheduleId(1L);
 
-        assertThat(result).isEqualTo(5L);
-    }
-
-    @Test
-    void countByScheduleId_zeroCount() {
-        when(appointmentRepository.countByScheduleId(1L)).thenReturn(0L);
-
-        long result = appointmentService.countByScheduleId(1L);
-
-        assertThat(result).isEqualTo(0L);
-    }
-
-    @Test
-    void countByScheduleId_multipleAppointments() {
-        when(appointmentRepository.countByScheduleId(1L)).thenReturn(10L);
-
-        long result = appointmentService.countByScheduleId(1L);
-
-        assertThat(result).isEqualTo(10L);
+        if (count == 0L) {
+            assertThat(result).isZero();
+        } else {
+            assertThat(result).isEqualTo(count);
+        }
     }
 }
