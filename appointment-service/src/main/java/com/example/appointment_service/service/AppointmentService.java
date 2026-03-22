@@ -26,8 +26,9 @@ public class AppointmentService {
 
     
     // @Value("${DOCTOR_SERVICE_URL:http://doctor-service:8083}")
+    
     @Value("${DOCTOR_SERVICE_URL:https://doctor-service-3h4t.onrender.com}")
-      // @Value("${doctor.service.url:http://localhost:8081}")
+      
     private String doctorServiceUrl;
 
     @Autowired
