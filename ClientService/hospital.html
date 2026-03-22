@@ -411,7 +411,7 @@
           <button class="view-btn active" id="btnGrid" onclick="setView('grid')" title="Grid view">⊞</button>
           <button class="view-btn" id="btnTable" onclick="setView('table')" title="Table view">☰</button>
         </div>
-        <button class="btn btn-primary" onclick="openAddHospital()">＋ Add Hospital</button>
+        <button class="btn btn-primary" id="addHospitalBtn" onclick="openAddHospital()">＋ Add Hospital</button>
       </div>
     </div>
 
@@ -553,6 +553,9 @@
   let currentView = 'grid';
   let selectedCity = '';
 
+  // ── ROLE ─────────────────────────────────────────────────
+  function isAdmin() { return localStorage.getItem('role') === 'ADMIN'; }
+
   // ── UTILS ────────────────────────────────────────────────
   function esc(s) {
     if (!s) return '';
@@ -588,6 +591,10 @@
     navSchedule.style.display = 'none';
     navAppointment.style.display = 'none';
     
+    // Show/hide Add Hospital button based on role
+    const addBtn = document.getElementById('addHospitalBtn');
+    if (addBtn) addBtn.style.display = role === 'ADMIN' ? '' : 'none';
+
     // Show items based on role
     if (role === 'ADMIN') {
       navDoctorReg.style.display = 'flex';
@@ -679,13 +686,14 @@
   }
 
   function hosCard(h) {
+    const admin = isAdmin();
     return `<div class="hcard">
       <div class="hcard-top">
         <div class="hcard-avatar">🏥</div>
         <div class="hcard-actions">
           <button class="icon-btn view" onclick="viewHospital(${h.hospitalId})" title="View doctors">👁️</button>
-          <button class="icon-btn edit" onclick="openEditHospital(${h.hospitalId})" title="Edit">✏️</button>
-          <button class="icon-btn del"  onclick="confirmDelete(${h.hospitalId},'${esc(h.name)}')" title="Delete">🗑️</button>
+          ${admin ? `<button class="icon-btn edit" onclick="openEditHospital(${h.hospitalId})" title="Edit">✏️</button>` : ''}
+          ${admin ? `<button class="icon-btn del"  onclick="confirmDelete(${h.hospitalId},'${esc(h.name)}')" title="Delete">🗑️</button>` : ''}
         </div>
       </div>
       <div class="hcard-name">${esc(h.name)}</div>
@@ -696,7 +704,7 @@
       <div class="city-chip">🌆 ${esc(h.city)}</div>
       <div class="hcard-footer">
         <button class="btn btn-accent btn-sm" onclick="viewHospital(${h.hospitalId})">👨‍⚕️ View Doctors</button>
-        <button class="btn btn-ghost btn-sm" onclick="openEditHospital(${h.hospitalId})">✏️ Edit</button>
+        ${admin ? `<button class="btn btn-ghost btn-sm" onclick="openEditHospital(${h.hospitalId})">✏️ Edit</button>` : ''}
       </div>
     </div>`;
   }
@@ -711,7 +719,7 @@
             </tr>
           </thead>
           <tbody>
-            ${list.map(h => `<tr>
+            ${list.map(h => { const admin = isAdmin(); return `<tr>
               <td><span style="color:var(--text-dim)">HOS-${String(h.hospitalId).padStart(4,'0')}</span></td>
               <td><strong>${esc(h.name)}</strong></td>
               <td><span style="background:rgba(6,182,212,.1);color:var(--secondary);font-size:12px;font-weight:600;padding:3px 9px;border-radius:20px">${esc(h.city)}</span></td>
@@ -721,11 +729,11 @@
               <td>
                 <div class="td-actions">
                   <button class="icon-btn view" onclick="viewHospital(${h.hospitalId})" title="View">👁️</button>
-                  <button class="icon-btn edit" onclick="openEditHospital(${h.hospitalId})" title="Edit">✏️</button>
-                  <button class="icon-btn del"  onclick="confirmDelete(${h.hospitalId},'${esc(h.name)}')" title="Delete">🗑️</button>
+                  ${admin ? `<button class="icon-btn edit" onclick="openEditHospital(${h.hospitalId})" title="Edit">✏️</button>` : ''}
+                  ${admin ? `<button class="icon-btn del"  onclick="confirmDelete(${h.hospitalId},'${esc(h.name)}')" title="Delete">🗑️</button>` : ''}
                 </div>
               </td>
-            </tr>`).join('')}
+            </tr>`; }).join('')}
           </tbody>
         </table>
       </div>`;
@@ -764,15 +772,23 @@
         document.getElementById('modalDoctors').innerHTML = `<div style="text-align:center;padding:30px;color:var(--text-muted)">No doctors linked to this hospital yet</div>`;
         return;
       }
-      document.getElementById('modalDoctors').innerHTML = `<div class="doc-list">${docs.map(d => `
+      document.getElementById('modalDoctors').innerHTML = `<div class="doc-list">${docs.map(d => {
+        const name = (d.firstName || d.lastName)
+          ? `Dr. ${esc(d.firstName || '')} ${esc(d.lastName || '')}`.trim()
+          : `Doctor ID: ${esc(String(d.doctorId))}`;
+        const spec = d.specialization ? esc(d.specialization) : `ID: ${esc(String(d.doctorId))}`;
+        return `
         <div class="doc-item">
           <div class="doc-avatar">👨‍⚕️</div>
           <div>
-            <div class="doc-name">Dr. ${esc(d.firstName)} ${esc(d.lastName)}</div>
-            <div class="doc-spec">${esc(d.specialization) || 'General Practice'}</div>
+            <div class="doc-name">${name}</div>
+            <div class="doc-spec" style="color:var(--accent);font-weight:600">${spec}</div>
+            <div class="doc-spec">${esc(d.dayOfWeek)} &nbsp;|&nbsp; ${esc(d.startTime)} – ${esc(d.endTime)}</div>
+            <div class="doc-spec">Slot Duration: ${esc(String(d.slotDuration))} mins</div>
           </div>
-          ${d.licenseNumber ? `<div class="doc-badge">🪪 ${esc(d.licenseNumber)}</div>` : ''}
-        </div>`).join('')}</div>`;
+          <div class="doc-badge">🗓️ Schedule #${esc(String(d.scheduleId))}</div>
+        </div>`;
+      }).join('')}</div>`;
     } catch (e) {
       document.getElementById('modalDoctors').innerHTML = `<div style="text-align:center;padding:20px;color:var(--danger)">Could not load doctors: ${e.message}</div>`;
     }
@@ -780,6 +796,7 @@
 
   // ── ADD / EDIT ────────────────────────────────────────────
   function openAddHospital() {
+    if (!isAdmin()) { toast('Only admins can add hospitals', false); return; }
     editingId = null;
     document.getElementById('hosModalTitle').textContent = 'Add Hospital';
     ['hName','hCity','hAddress','hContact','hEmail'].forEach(id => document.getElementById(id).value = '');
@@ -787,6 +804,7 @@
   }
 
   function openEditHospital(id) {
+    if (!isAdmin()) { toast('Only admins can edit hospitals', false); return; }
     const h = allHospitals.find(x => x.hospitalId === id);
     if (!h) return;
     editingId = id;
@@ -826,6 +844,7 @@
 
   // ── DELETE ────────────────────────────────────────────────
   function confirmDelete(id, name) {
+    if (!isAdmin()) { toast('Only admins can delete hospitals', false); return; }
     document.getElementById('delSub').innerHTML = `Delete <strong>${esc(name)}</strong>?<br><span style="color:var(--text-muted)">This action cannot be undone.</span>`;
     document.getElementById('delConfirmBtn').onclick = () => performDelete(id);
     openModal('ov-delete');

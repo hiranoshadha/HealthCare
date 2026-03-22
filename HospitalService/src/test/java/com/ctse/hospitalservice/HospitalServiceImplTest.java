@@ -1,7 +1,7 @@
 package com.ctse.hospitalservice;
 
-import com.ctse.hospitalservice.client.UserServiceClient;
-import com.ctse.hospitalservice.dto.DoctorInfoDTO;
+import com.ctse.hospitalservice.client.DoctorServiceClient;
+import com.ctse.hospitalservice.dto.DoctorScheduleDTO;
 import com.ctse.hospitalservice.dto.HospitalDTO;
 import com.ctse.hospitalservice.dto.HospitalWithDoctorsDTO;
 import com.ctse.hospitalservice.exception.ResourceNotFoundException;
@@ -29,7 +29,7 @@ class HospitalServiceImplTest {
     private HospitalRepository hospitalRepository;
 
     @Mock
-    private UserServiceClient userServiceClient;
+    private DoctorServiceClient doctorServiceClient;
 
     @InjectMocks
     private HospitalServiceImpl hospitalService;
@@ -173,25 +173,29 @@ class HospitalServiceImplTest {
     // ---- getHospitalWithDoctors ----
 
     @Test
-    void getHospitalWithDoctors_returnsDoctorsFromUserService() {
-        DoctorInfoDTO doctor = new DoctorInfoDTO();
-        doctor.setFirstName("John");
-        doctor.setLastName("Doe");
+    void getHospitalWithDoctors_returnsSchedulesFromDoctorService() {
+        DoctorScheduleDTO schedule = new DoctorScheduleDTO();
+        schedule.setDoctorId(1L);
+        schedule.setHospitalId(1L);
+        schedule.setDayOfWeek("MONDAY");
+        schedule.setStartTime("09:00");
+        schedule.setEndTime("17:00");
+        schedule.setSlotDuration(30);
 
         when(hospitalRepository.findById(1L)).thenReturn(Optional.of(hospital));
-        when(userServiceClient.getAllDoctors()).thenReturn(List.of(doctor));
+        when(doctorServiceClient.getSchedulesByHospitalId(1L)).thenReturn(List.of(schedule));
 
         HospitalWithDoctorsDTO result = hospitalService.getHospitalWithDoctors(1L);
 
         assertThat(result.getHospitalId()).isEqualTo(1L);
         assertThat(result.getDoctors()).hasSize(1);
-        assertThat(result.getDoctors().get(0).getFirstName()).isEqualTo("John");
+        assertThat(result.getDoctors().get(0).getDayOfWeek()).isEqualTo("MONDAY");
     }
 
     @Test
-    void getHospitalWithDoctors_userServiceUnavailable_returnsEmptyDoctors() {
+    void getHospitalWithDoctors_doctorServiceUnavailable_returnsEmptyDoctors() {
         when(hospitalRepository.findById(1L)).thenReturn(Optional.of(hospital));
-        when(userServiceClient.getAllDoctors()).thenReturn(List.of());
+        when(doctorServiceClient.getSchedulesByHospitalId(1L)).thenReturn(List.of());
 
         HospitalWithDoctorsDTO result = hospitalService.getHospitalWithDoctors(1L);
 
