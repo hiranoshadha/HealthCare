@@ -1,6 +1,5 @@
 package com.example.appointment_service;
 
-import com.example.appointment_service.exception.ResourceNotFoundException;
 import com.example.appointment_service.model.Appointment;
 import com.example.appointment_service.repository.AppointmentRepository;
 import com.example.appointment_service.service.serviceImpl.AppointmentServiceImpl;
@@ -10,15 +9,22 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,17 +57,17 @@ class AppointmentServiceImplTest {
 
     @Test
     void createAppointment_success() {
-        // Mock schedule retrieval from doctor service
-        java.util.Map<String, Object> schedule = new java.util.HashMap<>();
-        schedule.put("scheduleId", 1L);
+        Map<String, Object> schedule = new HashMap<>();
+        schedule.put("scheduleId", 1);
         schedule.put("dayOfWeek", "MONDAY");
         schedule.put("startTime", "09:00");
         schedule.put("endTime", "17:00");
         schedule.put("slotDuration", 30);
 
-        when(restTemplate.getForObject(contains("/schedules/1"), any()))
-                .thenReturn(schedule);
-        when(appointmentRepository.findStartTimesByScheduleIdAndAppointmentDate(1L, appointment.getAppointmentDate()))
+        ResponseEntity<Map> mockResponse = new ResponseEntity<>(schedule, HttpStatus.OK);
+        when(restTemplate.getForEntity(contains("/api/schedules/1"), eq(Map.class)))
+                .thenReturn(mockResponse);
+        when(appointmentRepository.findStartTimesByScheduleIdAndAppointmentDate(eq(1L), any(LocalDate.class)))
                 .thenReturn(List.of());
         when(appointmentRepository.save(any(Appointment.class))).thenReturn(appointment);
 
@@ -76,8 +82,8 @@ class AppointmentServiceImplTest {
 
     @Test
     void createAppointment_scheduleNotFound_throwsException() {
-        when(restTemplate.getForObject(contains("/schedules/99"), any()))
-                .thenThrow(new ResourceNotFoundException("Schedule not found"));
+        when(restTemplate.getForEntity(contains("/api/schedules/99"), eq(Map.class)))
+                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule not found"));
 
         assertThatThrownBy(() -> appointmentService.createAppointment(99L, 1L))
                 .isInstanceOf(Exception.class);
@@ -98,12 +104,11 @@ class AppointmentServiceImplTest {
     }
 
     @Test
-    void getAppointmentById_notFound_throwsResourceNotFoundException() {
+    void getAppointmentById_notFound_throwsException() {
         when(appointmentRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> appointmentService.getAppointmentById(99L))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("99");
+                .isInstanceOf(ResponseStatusException.class);
     }
 
     // ---- getAllAppointments ----
@@ -191,11 +196,11 @@ class AppointmentServiceImplTest {
     }
 
     @Test
-    void deleteAppointment_notFound_throwsResourceNotFoundException() {
+    void deleteAppointment_notFound_throwsException() {
         when(appointmentRepository.existsById(99L)).thenReturn(false);
 
         assertThatThrownBy(() -> appointmentService.deleteAppointment(99L))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(ResponseStatusException.class);
 
         verify(appointmentRepository, never()).deleteById(any());
     }

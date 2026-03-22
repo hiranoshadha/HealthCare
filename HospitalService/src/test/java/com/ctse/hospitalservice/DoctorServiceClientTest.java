@@ -37,7 +37,7 @@ class DoctorServiceClientTest {
         schedule.setHospitalId(1L);
         schedule.setDayOfWeek("MONDAY");
 
-        when(restTemplate.getForObject("http://doctor-service/schedules/hospital/1", DoctorScheduleDTO[].class))
+        when(restTemplate.getForObject("http://doctor-service/api/schedules/hospital/1", DoctorScheduleDTO[].class))
                 .thenReturn(new DoctorScheduleDTO[]{schedule});
 
         List<DoctorScheduleDTO> result = doctorServiceClient.getSchedulesByHospitalId(1L);
@@ -48,7 +48,7 @@ class DoctorServiceClientTest {
 
     @Test
     void getSchedulesByHospitalId_nullResponse_returnsEmptyList() {
-        when(restTemplate.getForObject("http://doctor-service/schedules/hospital/1", DoctorScheduleDTO[].class))
+        when(restTemplate.getForObject("http://doctor-service/api/schedules/hospital/1", DoctorScheduleDTO[].class))
                 .thenReturn(null);
 
         List<DoctorScheduleDTO> result = doctorServiceClient.getSchedulesByHospitalId(1L);
@@ -58,7 +58,7 @@ class DoctorServiceClientTest {
 
     @Test
     void getSchedulesByHospitalId_serviceUnavailable_returnsEmptyList() {
-        when(restTemplate.getForObject("http://doctor-service/schedules/hospital/1", DoctorScheduleDTO[].class))
+        when(restTemplate.getForObject("http://doctor-service/api/schedules/hospital/1", DoctorScheduleDTO[].class))
                 .thenThrow(new RestClientException("Connection refused"));
 
         List<DoctorScheduleDTO> result = doctorServiceClient.getSchedulesByHospitalId(1L);
