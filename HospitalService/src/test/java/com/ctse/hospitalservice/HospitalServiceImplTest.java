@@ -1,6 +1,7 @@
 package com.ctse.hospitalservice;
 
 import com.ctse.hospitalservice.client.DoctorServiceClient;
+import com.ctse.hospitalservice.client.UserServiceClient;
 import com.ctse.hospitalservice.dto.DoctorScheduleDTO;
 import com.ctse.hospitalservice.dto.HospitalDTO;
 import com.ctse.hospitalservice.dto.HospitalWithDoctorsDTO;
@@ -30,6 +31,9 @@ class HospitalServiceImplTest {
 
     @Mock
     private DoctorServiceClient doctorServiceClient;
+
+    @Mock
+    private UserServiceClient userServiceClient;
 
     @InjectMocks
     private HospitalServiceImpl hospitalService;
@@ -184,6 +188,7 @@ class HospitalServiceImplTest {
 
         when(hospitalRepository.findById(1L)).thenReturn(Optional.of(hospital));
         when(doctorServiceClient.getSchedulesByHospitalId(1L)).thenReturn(List.of(schedule));
+        when(userServiceClient.getAllDoctors()).thenReturn(List.of());
 
         HospitalWithDoctorsDTO result = hospitalService.getHospitalWithDoctors(1L);
 
@@ -196,6 +201,7 @@ class HospitalServiceImplTest {
     void getHospitalWithDoctors_doctorServiceUnavailable_returnsEmptyDoctors() {
         when(hospitalRepository.findById(1L)).thenReturn(Optional.of(hospital));
         when(doctorServiceClient.getSchedulesByHospitalId(1L)).thenReturn(List.of());
+        when(userServiceClient.getAllDoctors()).thenReturn(List.of());
 
         HospitalWithDoctorsDTO result = hospitalService.getHospitalWithDoctors(1L);
 
