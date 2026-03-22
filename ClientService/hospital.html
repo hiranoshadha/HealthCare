@@ -763,10 +763,15 @@
       <div id="modalDoctors"><div style="text-align:center;padding:30px;color:var(--text-muted)">⏳ Loading doctors…</div></div>`;
     openModal('ov-detail');
     try {
+      console.log('[Hospital] Fetching:', `${API_HOSPITAL}/api/hospitals/${id}/doctors`);
       const res = await fetch(`${API_HOSPITAL}/api/hospitals/${id}/doctors`);
+      console.log('[Hospital] Response status:', res.status);
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
+      console.log('[Hospital] Full response:', JSON.stringify(data));
       const docs = data.doctors || [];
+      console.log('[Hospital] Doctors count:', docs.length);
+      if (docs.length) console.log('[Hospital] First doctor:', JSON.stringify(docs[0]));
       if (!docs.length) {
         document.getElementById('modalDoctors').innerHTML = `<div style="text-align:center;padding:30px;color:var(--text-muted)">No doctors linked to this hospital yet</div>`;
         return;

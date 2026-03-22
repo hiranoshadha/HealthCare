@@ -10,6 +10,7 @@ import com.ctse.hospitalservice.model.Hospital;
 import com.ctse.hospitalservice.repository.HospitalRepository;
 import com.ctse.hospitalservice.service.HospitalService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -115,12 +117,17 @@ public class HospitalServiceImpl implements HospitalService {
         dto.setEmail(hospital.getEmail());
         List<com.ctse.hospitalservice.dto.DoctorScheduleDTO> schedules =
                 doctorServiceClient.getSchedulesByHospitalId(hospitalId);
+        log.info("[HospitalService] Schedules for hospital {}: count={}", hospitalId, schedules.size());
 
-        Map<Long, DoctorInfoDTO> doctorMap = userServiceClient.getAllDoctors().stream()
+        List<DoctorInfoDTO> allDoctors = userServiceClient.getAllDoctors();
+        log.info("[HospitalService] Doctors from UserService: count={}", allDoctors.size());
+
+        Map<Long, DoctorInfoDTO> doctorMap = allDoctors.stream()
                 .collect(Collectors.toMap(DoctorInfoDTO::getDoctorId, Function.identity(), (a, b) -> a));
 
         schedules.forEach(s -> {
             DoctorInfoDTO info = doctorMap.get(s.getDoctorId());
+            log.info("[HospitalService] Schedule doctorId={} -> match={}", s.getDoctorId(), info != null ? info.getFirstName() + " " + info.getLastName() : "NOT FOUND");
             if (info != null) {
                 s.setFirstName(info.getFirstName());
                 s.setLastName(info.getLastName());
