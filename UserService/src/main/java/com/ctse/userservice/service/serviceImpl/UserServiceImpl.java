@@ -7,8 +7,10 @@ import com.ctse.userservice.model.User;
 import com.ctse.userservice.repository.UserRepository;
 import com.ctse.userservice.repository.PatientRepository;
 import com.ctse.userservice.repository.DoctorRepository;
+import com.ctse.userservice.security.JwtUtil;
 import com.ctse.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     private User createUser(String username, String password, String role) {
         if (userRepository.existsByUsername(username)) {
@@ -31,7 +35,7 @@ public class UserServiceImpl implements UserService {
 
         User user = new User();
         user.setUsername(username);
-        user.setPassword(password);
+        user.setPassword(passwordEncoder.encode(password));
         user.setRole(role);
 
         return userRepository.save(user);
@@ -82,18 +86,31 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Object login(String userName, String password) {
-        User user = userRepository.findByUsernameAndPassword(
-                userName, password
-        ).orElseThrow(() -> new RuntimeException("Invalid username or password"));
+        User user = userRepository.findByUsername(userName)
+                .orElseThrow(() -> new RuntimeException("Invalid username or password"));
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new RuntimeException("Invalid username or password");
+        }
+
+        String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
 
         if ("PATIENT".equals(user.getRole())) {
             Patient patient = patientRepository.findByUserId(user.getUserId())
                     .orElseThrow(() -> new RuntimeException("Patient profile not found"));
-            return mapToPatientDTO(patient);
+            PatientDTO patientDTO = mapToPatientDTO(patient);
+            return new LoginResponseDTO(token, patientDTO, "PATIENT");
         } else if ("DOCTOR".equals(user.getRole())) {
             Doctor doctor = doctorRepository.findByUserId(user.getUserId())
                     .orElseThrow(() -> new RuntimeException("Doctor profile not found"));
-            return mapToDoctorDTO(doctor);
+            DoctorDTO doctorDTO = mapToDoctorDTO(doctor);
+            return new LoginResponseDTO(token, doctorDTO, "DOCTOR");
+        } else if ("ADMIN".equals(user.getRole())) {
+            // Admin users don't have a separate profile, return basic user data
+            AdminDTO adminDTO = new AdminDTO();
+            adminDTO.setUserId(user.getUserId());
+            adminDTO.setUsername(user.getUsername());
+            return new LoginResponseDTO(token, adminDTO, "ADMIN");
         } else {
             throw new RuntimeException("Invalid user role");
         }
