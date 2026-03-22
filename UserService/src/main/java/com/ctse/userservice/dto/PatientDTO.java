@@ -15,4 +15,5 @@ public class PatientDTO extends PatientBase {
     private Long userId;
     private String username;
     private String role;
+    private String password;
 }

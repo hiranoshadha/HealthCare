@@ -2,8 +2,12 @@ package com.ctse.userservice.controller;
 
 import com.ctse.userservice.dto.DoctorDTO;
 import com.ctse.userservice.dto.LoginDTO;
+import com.ctse.userservice.dto.LoginResponseDTO;
 import com.ctse.userservice.dto.PatientDTO;
 import com.ctse.userservice.service.UserService;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,15 +22,15 @@ public class UserController {
 
     private final UserService userService;
 
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = LoginResponseDTO.class)))
     @PostMapping("/login")
     public ResponseEntity<Object> login(@RequestBody LoginDTO loginDTO) {
         return ResponseEntity.ok(userService.login(loginDTO.getUsername(), loginDTO.getPassword()));
     }
 
     @PostMapping("/patients")
-    public ResponseEntity<PatientDTO> createPatient(@RequestBody PatientDTO patientDTO,
-                                                    @RequestParam String password) {
-        return new ResponseEntity<>(userService.createPatient(patientDTO, password), HttpStatus.CREATED);
+    public ResponseEntity<PatientDTO> createPatient(@RequestBody PatientDTO patientDTO) {
+        return new ResponseEntity<>(userService.createPatient(patientDTO, patientDTO.getPassword()), HttpStatus.CREATED);
     }
 
     @GetMapping("/patients/{patientId}")
@@ -57,9 +61,8 @@ public class UserController {
     }
 
     @PostMapping("/doctors")
-    public ResponseEntity<DoctorDTO> createDoctor(@RequestBody DoctorDTO doctorDTO,
-                                                  @RequestParam String password) {
-        return new ResponseEntity<>(userService.createDoctor(doctorDTO, password), HttpStatus.CREATED);
+    public ResponseEntity<DoctorDTO> createDoctor(@RequestBody DoctorDTO doctorDTO) {
+        return new ResponseEntity<>(userService.createDoctor(doctorDTO, doctorDTO.getPassword()), HttpStatus.CREATED);
     }
 
     @GetMapping("/doctors/{doctorId}")
