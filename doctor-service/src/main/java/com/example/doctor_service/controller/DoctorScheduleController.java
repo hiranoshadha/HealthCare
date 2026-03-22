@@ -52,6 +52,12 @@ public class DoctorScheduleController {
         return ResponseEntity.ok(schedules);
     }
 
+    // Get all schedules for a hospital (used by Hospital Service)
+    @GetMapping("/hospital/{hospitalId}")
+    public ResponseEntity<List<DoctorSchedule>> getByHospital(@PathVariable Long hospitalId) {
+        return ResponseEntity.ok(service.getSchedulesByHospitalId(hospitalId));
+    }
+
     // Get remaining slots for a schedule
     @GetMapping("/remaining/{scheduleId}")
     public ResponseEntity<RemainingSlotsResponse> remaining(@PathVariable Long scheduleId) {
