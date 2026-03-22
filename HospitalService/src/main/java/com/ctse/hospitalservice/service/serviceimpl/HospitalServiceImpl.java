@@ -1,4 +1,4 @@
-package com.ctse.hospitalservice.service.serviceImpl;
+package com.ctse.hospitalservice.service.serviceimpl;
 
 import com.ctse.hospitalservice.client.UserServiceClient;
 import com.ctse.hospitalservice.dto.HospitalDTO;
@@ -12,12 +12,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class HospitalServiceImpl implements HospitalService {
+
+    private static final String HOSPITAL_NOT_FOUND = "Hospital not found with id: ";
 
     private final HospitalRepository hospitalRepository;
     private final UserServiceClient userServiceClient;
@@ -36,7 +37,7 @@ public class HospitalServiceImpl implements HospitalService {
     @Override
     public HospitalDTO createHospital(HospitalDTO hospitalDTO) {
         if (hospitalRepository.existsByEmail(hospitalDTO.getEmail())) {
-            throw new RuntimeException("Hospital with this email already exists");
+            throw new ResourceNotFoundException("Hospital with this email already exists");
         }
 
         Hospital hospital = new Hospital();
@@ -53,7 +54,7 @@ public class HospitalServiceImpl implements HospitalService {
     @Override
     public HospitalDTO getHospitalById(Long hospitalId) {
         Hospital hospital = hospitalRepository.findById(hospitalId)
-                .orElseThrow(() -> new ResourceNotFoundException("Hospital not found with id: " + hospitalId));
+                .orElseThrow(() -> new ResourceNotFoundException(HOSPITAL_NOT_FOUND + hospitalId));
         return mapToDTO(hospital);
     }
 
@@ -61,20 +62,20 @@ public class HospitalServiceImpl implements HospitalService {
     public List<HospitalDTO> getAllHospitals() {
         return hospitalRepository.findAll().stream()
                 .map(this::mapToDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public List<HospitalDTO> getHospitalsByCity(String city) {
         return hospitalRepository.findByCity(city).stream()
                 .map(this::mapToDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public HospitalDTO updateHospital(Long hospitalId, HospitalDTO hospitalDTO) {
         Hospital hospital = hospitalRepository.findById(hospitalId)
-                .orElseThrow(() -> new ResourceNotFoundException("Hospital not found with id: " + hospitalId));
+                .orElseThrow(() -> new ResourceNotFoundException(HOSPITAL_NOT_FOUND + hospitalId));
 
         hospital.setName(hospitalDTO.getName());
         hospital.setAddress(hospitalDTO.getAddress());
@@ -89,7 +90,7 @@ public class HospitalServiceImpl implements HospitalService {
     @Override
     public void deleteHospital(Long hospitalId) {
         if (!hospitalRepository.existsById(hospitalId)) {
-            throw new ResourceNotFoundException("Hospital not found with id: " + hospitalId);
+            throw new ResourceNotFoundException(HOSPITAL_NOT_FOUND + hospitalId);
         }
         hospitalRepository.deleteById(hospitalId);
     }
@@ -97,7 +98,7 @@ public class HospitalServiceImpl implements HospitalService {
     @Override
     public HospitalWithDoctorsDTO getHospitalWithDoctors(Long hospitalId) {
         Hospital hospital = hospitalRepository.findById(hospitalId)
-                .orElseThrow(() -> new ResourceNotFoundException("Hospital not found with id: " + hospitalId));
+                .orElseThrow(() -> new ResourceNotFoundException(HOSPITAL_NOT_FOUND + hospitalId));
 
         HospitalWithDoctorsDTO dto = new HospitalWithDoctorsDTO();
         dto.setHospitalId(hospital.getHospitalId());
