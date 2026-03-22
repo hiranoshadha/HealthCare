@@ -369,8 +369,8 @@
       <a id="navDoctorReg" class="nav-item" href="doctor-registration.html" style="display:none;"><span class="nav-icon">⚕️</span> Doctor Registration</a>
       <a id="navHospital" class="nav-item" href="hospital.html" style="display:none;"><span class="nav-icon">🏥</span> Hospitals</a>
       <a id="navUser" class="nav-item active" href="user-profile.html" style="display:none;"><span class="nav-icon">👤</span> User</a>
-      <a id="navSchedule" class="nav-item" href="schedules.html" style="display:none;"><span class="nav-icon">📅</span> Schedule</a>
-      <a id="navAppointment" class="nav-item" href="appointments.html" style="display:none;"><span class="nav-icon">📋</span> Appointments</a>
+      <a id="navSchedule" class="nav-item" href="schedule.html" style="display:none;"><span class="nav-icon">📅</span> Schedule</a>
+      <a id="navAppointment" class="nav-item" href="appointment.html" style="display:none;"><span class="nav-icon">📋</span> Appointments</a>
     </nav>
     <div style="padding: 12px 12px 0;">
       <div class="nav-section-label" style="padding:0 2px; margin-bottom:8px">System</div>
@@ -386,10 +386,6 @@
       </a>
     </div>
     <div class="sidebar-bottom">
-      <div class="api-badge">
-        <div class="dot" id="dot"></div>
-        <span id="statusTxt">Checking...</span>
-      </div>
       <button class="btn btn-danger" onclick="logout()" style="width: 100%; margin-top: 12px;">
         <span>🚪</span>
         <span>Logout</span>
@@ -882,22 +878,10 @@
       }
     }
 
-    // Health check
-    async function checkHealth() {
-      try {
-        const r = await fetch(API_HOSPITAL + '/api/hospitals', { signal: AbortSignal.timeout(3000) });
-        const ok = r.ok || r.status < 500;
-        document.getElementById('dot').className = 'dot' + (ok ? '' : ' off');
-        document.getElementById('statusTxt').textContent = ok ? 'Services Online' : 'Service Error';
-      } catch {
-        document.getElementById('dot').className = 'dot off';
-        document.getElementById('statusTxt').textContent = 'Services Offline';
-      }
-    }
+
 
     // Initialize
     window.addEventListener('DOMContentLoaded', () => {
-      checkHealth();
       updateNavigation();
       loadProfile();
     });
