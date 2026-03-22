@@ -10,4 +10,6 @@ public interface DoctorScheduleRepository extends JpaRepository<DoctorSchedule, 
 	List<DoctorSchedule> findByDoctorId(Long doctorId);
 
 	List<DoctorSchedule> findByDoctorIdAndDayOfWeek(Long doctorId, DayOfWeek dayOfWeek);
+
+	List<DoctorSchedule> findByHospitalId(Long hospitalId);
 }

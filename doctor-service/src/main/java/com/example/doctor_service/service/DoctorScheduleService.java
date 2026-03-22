@@ -66,6 +66,10 @@ public class DoctorScheduleService {
         return repository.findAll();
     }
 
+    public List<DoctorSchedule> getSchedulesByHospitalId(Long hospitalId) {
+        return repository.findByHospitalId(hospitalId);
+    }
+
     public int calculateTotalSlots(Long scheduleId) {
         DoctorSchedule schedule = repository.findById(scheduleId)
             .orElseThrow(() -> new ResponseStatusException(

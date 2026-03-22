@@ -1,6 +1,6 @@
 package com.ctse.hospitalservice.service.serviceimpl;
 
-import com.ctse.hospitalservice.client.UserServiceClient;
+import com.ctse.hospitalservice.client.DoctorServiceClient;
 import com.ctse.hospitalservice.dto.HospitalDTO;
 import com.ctse.hospitalservice.dto.HospitalWithDoctorsDTO;
 import com.ctse.hospitalservice.exception.ResourceNotFoundException;
@@ -21,7 +21,7 @@ public class HospitalServiceImpl implements HospitalService {
     private static final String HOSPITAL_NOT_FOUND = "Hospital not found with id: ";
 
     private final HospitalRepository hospitalRepository;
-    private final UserServiceClient userServiceClient;
+    private final DoctorServiceClient doctorServiceClient;
 
     private HospitalDTO mapToDTO(Hospital hospital) {
         HospitalDTO dto = new HospitalDTO();
@@ -107,7 +107,7 @@ public class HospitalServiceImpl implements HospitalService {
         dto.setCity(hospital.getCity());
         dto.setContactNumber(hospital.getContactNumber());
         dto.setEmail(hospital.getEmail());
-        dto.setDoctors(userServiceClient.getAllDoctors());
+        dto.setDoctors(doctorServiceClient.getSchedulesByHospitalId(hospitalId));
 
         return dto;
     }

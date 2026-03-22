@@ -768,10 +768,11 @@
         <div class="doc-item">
           <div class="doc-avatar">👨‍⚕️</div>
           <div>
-            <div class="doc-name">Dr. ${esc(d.firstName)} ${esc(d.lastName)}</div>
-            <div class="doc-spec">${esc(d.specialization) || 'General Practice'}</div>
+            <div class="doc-name">Doctor ID: ${esc(String(d.doctorId))}</div>
+            <div class="doc-spec">${esc(d.dayOfWeek)} &nbsp;|&nbsp; ${esc(d.startTime)} – ${esc(d.endTime)}</div>
+            <div class="doc-spec">Slot Duration: ${esc(String(d.slotDuration))} mins</div>
           </div>
-          ${d.licenseNumber ? `<div class="doc-badge">🪪 ${esc(d.licenseNumber)}</div>` : ''}
+          <div class="doc-badge">🗓️ Schedule #${esc(String(d.scheduleId))}</div>
         </div>`).join('')}</div>`;
     } catch (e) {
       document.getElementById('modalDoctors').innerHTML = `<div style="text-align:center;padding:20px;color:var(--danger)">Could not load doctors: ${e.message}</div>`;
