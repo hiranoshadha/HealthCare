@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.DayOfWeek;
 import java.util.List;
 
 @RestController
@@ -63,5 +64,27 @@ public class DoctorScheduleController {
     public ResponseEntity<RemainingSlotsResponse> remaining(@PathVariable Long scheduleId) {
         int remaining = service.remainingSlots(scheduleId);
         return ResponseEntity.ok(new RemainingSlotsResponse(scheduleId, remaining));
+    }
+
+    @PatchMapping("/{id}/day")
+    public ResponseEntity<?> updateDay(@PathVariable Long id, @RequestParam DayOfWeek dayOfWeek) {
+        try {
+            DoctorSchedule updated = service.updateScheduleDay(id, dayOfWeek);
+            return ResponseEntity.ok(updated);
+        } catch (ResponseStatusException e) {
+            String message = e.getReason() == null ? "Unable to update schedule day" : e.getReason();
+            return ResponseEntity.status(e.getStatusCode()).body(message);
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        try {
+            service.deleteSchedule(id);
+            return ResponseEntity.noContent().build();
+        } catch (ResponseStatusException e) {
+            String message = e.getReason() == null ? "Unable to delete schedule" : e.getReason();
+            return ResponseEntity.status(e.getStatusCode()).body(message);
+        }
     }
 }
