@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Doctor Schedules - MediConnect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #0ea5e9;
+      --primary-dark: #0284c7;
+      --secondary: #06b6d4;
+      --accent: #8b5cf6;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --bg: #080f1a;
+      --bg-card: #0f1c2e;
+      --bg-card2: #162033;
+      --border: #1e3248;
+      --border-light: #243a52;
+      --text: #e8f4fd;
+      --text-muted: #7ea8c9;
+      --text-dim: #3d6080;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 256px; background: var(--bg-card); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 200;
+    }
+    .logo {
+      padding: 28px 20px 24px; display: flex; align-items: center; gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo-icon {
+      width: 42px; height: 42px; border-radius: 12px; font-size: 20px;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      box-shadow: 0 0 20px rgba(14,165,233,.35);
+    }
+    .logo-name {
+      font-size: 17px; font-weight: 800;
+      background: linear-gradient(135deg, #e0f2ff, var(--primary));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .logo-sub { font-size: 10px; color: var(--text-dim); font-weight: 500; letter-spacing: .5px; }
+    .nav { flex: 1; padding: 20px 12px; overflow-y: auto; }
+    .nav-item {
+      display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 10px;
+      cursor: pointer; color: var(--text-muted); font-size: 13.5px; font-weight: 500;
+      transition: all .2s; margin-bottom: 2px; text-decoration: none;
+    }
+    .nav-item:hover { background: rgba(14,165,233,.08); color: var(--primary); }
+    .nav-item.active {
+      background: linear-gradient(135deg, rgba(14,165,233,.15), rgba(139,92,246,.08));
+      color: var(--primary); border: 1px solid rgba(14,165,233,.18);
+    }
+    .nav-icon { font-size: 17px; width: 20px; text-align: center; }
+    .nav-section-label {
+      font-size: 10px; font-weight: 700; color: var(--text-dim);
+      text-transform: uppercase; letter-spacing: 1.2px; padding: 0 10px; margin: 20px 0 8px;
+    }
+    .sys-btn {
+      display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px;
+      font-size: 13px; font-weight: 600; text-decoration: none; margin-bottom: 6px;
+      transition: all .2s; position: relative; overflow: hidden;
+    }
+    .sys-btn::before { content: ''; position: absolute; inset: 0; opacity: 0; transition: opacity .2s; }
+    .sys-btn:hover::before { opacity: 1; }
+    .sys-btn-docs { background: rgba(139,92,246,.08); border: 1px solid rgba(139,92,246,.2); color: var(--accent); }
+    .sys-btn-docs::before { background: rgba(139,92,246,.08); }
+    .sys-btn-docs:hover { border-color: rgba(139,92,246,.4); box-shadow: 0 4px 16px rgba(139,92,246,.15); transform: translateX(3px); }
+    .sys-btn-health { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2); color: #f87171; }
+    .sys-btn-health::before { background: rgba(239,68,68,.08); }
+    .sys-btn-health:hover { border-color: rgba(239,68,68,.4); box-shadow: 0 4px 16px rgba(239,68,68,.15); transform: translateX(3px); }
+    .sys-btn-arrow { margin-left: auto; font-size: 12px; opacity: .5; }
+    .sidebar-bottom { padding: 16px 20px; border-top: 1px solid var(--border); }
+    .api-badge { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 6px var(--success); animation: blink 2s infinite; }
+    .dot.off { background: var(--danger); box-shadow: 0 0 6px var(--danger); animation: none; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    .main { margin-left: 256px; flex: 1; padding: 36px 36px 60px; min-height: 100vh; }
+    .topbar { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; gap: 18px; }
+    .page-title {
+      font-size: 30px; font-weight: 900; line-height: 1.1;
+      background: linear-gradient(135deg, #d9f0ff 10%, var(--primary) 60%, var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .page-sub { font-size: 14px; color: var(--text-muted); margin-top: 6px; }
+
+    .search-wrap { position: relative; }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 15px; }
+    .search-input {
+      background: var(--bg-card); border: 1px solid var(--border); color: var(--text);
+      padding: 10px 14px 10px 38px; border-radius: 10px; font-size: 13.5px; width: 250px;
+      font-family: inherit; outline: none; transition: all .2s;
+    }
+    .search-input::placeholder { color: var(--text-dim); }
+    .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14,165,233,.12); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px; padding: 10px 18px; border-radius: 10px;
+      font-size: 13.5px; font-weight: 600; cursor: pointer; border: none; font-family: inherit;
+      transition: all .2s; white-space: nowrap;
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; box-shadow: 0 4px 18px rgba(14,165,233,.3); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(14,165,233,.45); }
+    .btn-danger { background: rgba(239,68,68,.14); color: #ff9d9d; border: 1px solid rgba(239,68,68,.35); }
+    .btn-danger:hover { background: rgba(239,68,68,.2); color: #ffd0d0; }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--bg-card2); color: var(--text); }
+    .btn-sm { padding: 7px 13px; font-size: 12.5px; border-radius: 8px; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-bottom: 28px; }
+    .stat-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 22px;
+      position: relative; overflow: hidden;
+    }
+    .stat-glow { position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; border-radius: 50%; filter: blur(30px); opacity: .15; }
+    .stat-card.c1 .stat-glow { background: var(--primary); }
+    .stat-card.c2 .stat-glow { background: var(--secondary); }
+    .stat-card.c3 .stat-glow { background: var(--accent); }
+    .stat-card.c4 .stat-glow { background: var(--warning); }
+    .stat-chip { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; font-size: 21px; margin-bottom: 18px; }
+    .stat-card.c1 .stat-chip { background: rgba(14,165,233,.12); }
+    .stat-card.c2 .stat-chip { background: rgba(6,182,212,.12); }
+    .stat-card.c3 .stat-chip { background: rgba(139,92,246,.12); }
+    .stat-card.c4 .stat-chip { background: rgba(245,158,11,.12); }
+    .stat-val { font-size: 34px; font-weight: 900; line-height: 1; margin-bottom: 6px; }
+    .stat-card.c1 .stat-val { color: var(--primary); }
+    .stat-card.c2 .stat-val { color: var(--secondary); }
+    .stat-card.c3 .stat-val { color: var(--accent); }
+    .stat-card.c4 .stat-val { color: var(--warning); }
+    .stat-lbl { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+
+    .filters-bar {
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 22px;
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px;
+    }
+    .filter-label { font-size: 12.5px; font-weight: 600; color: var(--text-muted); margin-right: 4px; }
+    .finput {
+      background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 10px;
+      font-size: 13.5px; font-family: inherit; outline: none; transition: all .2s; padding: 9px 12px;
+    }
+    .finput:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14,165,233,.1); }
+
+    .sec-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .sec-title { font-size: 17px; font-weight: 700; }
+    .pill { background: rgba(14,165,233,.12); color: var(--primary); font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; margin-left: 10px; }
+
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+    .hcard {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 22px;
+      position: relative; overflow: hidden; transition: all .3s;
+    }
+    .hcard:hover { border-color: rgba(14,165,233,.35); transform: translateY(-5px); box-shadow: 0 16px 48px rgba(0,0,0,.35); }
+    .hcard-name { font-size: 16px; font-weight: 700; margin-bottom: 3px; }
+    .hcard-id { font-size: 11px; color: var(--text-dim); margin-bottom: 14px; }
+    .info-line { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.4; }
+    .info-line .ico { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
+    .hcard-footer { display: flex; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+
+    .table-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: var(--bg-card2); }
+    th {
+      text-align: left; padding: 14px 18px; font-size: 12px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .8px; border-bottom: 1px solid var(--border);
+    }
+    td { padding: 14px 18px; font-size: 13.5px; border-bottom: 1px solid var(--border); color: var(--text); }
+    tr:last-child td { border-bottom: none; }
+
+    .view-toggle {
+      display: flex; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 3px; gap: 2px;
+    }
+    .view-btn {
+      padding: 6px 12px; border-radius: 8px; border: none; background: transparent; color: var(--text-muted);
+      font-size: 14px; cursor: pointer; transition: all .2s;
+    }
+    .view-btn.active { background: var(--bg-card); color: var(--primary); }
+
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); backdrop-filter: blur(6px); z-index: 999; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; visibility: hidden; transition: all .3s; }
+    .overlay.open { opacity: 1; visibility: visible; }
+    .modal {
+      background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 20px; width: 100%; max-width: 620px;
+      box-shadow: 0 30px 100px rgba(0,0,0,.6); transform: translateY(24px) scale(.97); transition: all .3s;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .overlay.open .modal { transform: translateY(0) scale(1); }
+    .modal-head { padding: 24px 24px 0; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--bg-card); z-index: 1; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .modal-title { font-size: 19px; font-weight: 700; }
+    .close-btn { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; font-size: 17px; }
+    .modal-body { padding: 22px 24px; }
+    .modal-foot { padding: 0 24px 24px; display: flex; gap: 10px; justify-content: flex-end; }
+    .frow { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .fg { margin-bottom: 14px; }
+    .flabel { display: block; font-size: 12.5px; font-weight: 600; color: var(--text-muted); margin-bottom: 7px; }
+
+    .toast-wrap { position: fixed; top: 22px; right: 22px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast { background: var(--bg-card2); border: 1px solid var(--border-light); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 11px; font-size: 13.5px; min-width: 260px; }
+    .toast.ok { border-left: 3px solid var(--success); }
+    .toast.bad { border-left: 3px solid var(--danger); }
+
+    .empty-box { text-align: center; padding: 80px 20px; color: var(--text-muted); }
+    .empty-ico { font-size: 64px; opacity: .4; margin-bottom: 14px; }
+    .empty-ttl { font-size: 19px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+
+    @media (max-width: 1100px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 700px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 20px; }
+      .topbar { flex-direction: column; }
+      .frow { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🏥</div>
+      <div>
+        <div class="logo-name">MediConnect</div>
+        <div class="logo-sub">Client Portal</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a class="nav-item" href="Index.html"><span class="nav-icon">👤</span> Users</a>
+      <a class="nav-item" href="hospital.html"><span class="nav-icon">🏥</span> Hospitals</a>
+      <a class="nav-item active" href="doctor.html"><span class="nav-icon">👨‍⚕️</span> Doctor</a>
+      <a class="nav-item" href="appointment.html"><span class="nav-icon">📋</span> Appointment</a>
+    </nav>
+    <div style="padding: 12px 12px 0;">
+      <div class="nav-section-label" style="padding:0 2px; margin-bottom:8px">System</div>
+      <a class="sys-btn sys-btn-docs" href="http://localhost:8083/swagger-ui.html" target="_blank">
+        <span>📄 Doctor API Docs</span><span class="sys-btn-arrow">↗</span>
+      </a>
+      <a class="sys-btn sys-btn-health" href="http://localhost:8083/actuator/health" target="_blank">
+        <span>💓 Doctor Health</span><span class="sys-btn-arrow">↗</span>
+      </a>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="api-badge">
+        <div class="dot" id="dot"></div>
+        <span id="statusTxt">Checking...</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">Doctor Schedules</h1>
+        <p class="page-sub">Manage All Doctor Services</p>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input id="globalSearch" class="search-input" type="text" placeholder="Search" oninput="applyFilters()" />
+        </div>
+        <div class="view-toggle">
+          <button class="view-btn active" id="btnGrid" onclick="setView('grid')">⊞</button>
+          <button class="view-btn" id="btnTable" onclick="setView('table')">☰</button>
+        </div>
+        <button class="btn btn-primary" onclick="openAddSchedule()">＋ Create Schedule</button>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card c1"><div class="stat-glow"></div><div class="stat-chip">📅</div><div class="stat-val" id="sTotal">0</div><div class="stat-lbl">All Schedules</div></div>
+      <div class="stat-card c2"><div class="stat-glow"></div><div class="stat-chip">👨‍⚕️</div><div class="stat-val" id="sDoctors">0</div><div class="stat-lbl">Doctors Covered</div></div>
+    </div>
+
+    <div class="filters-bar">
+      <span class="filter-label">Filter By:</span>
+      <select id="dayInput" class="finput" style="width:170px">
+        <option value="">Day (All)</option>
+        <option value="MONDAY">MONDAY</option>
+        <option value="TUESDAY">TUESDAY</option>
+        <option value="WEDNESDAY">WEDNESDAY</option>
+        <option value="THURSDAY">THURSDAY</option>
+        <option value="FRIDAY">FRIDAY</option>
+        <option value="SATURDAY">SATURDAY</option>
+        <option value="SUNDAY">SUNDAY</option>
+      </select>
+      <input id="doctorIdInput" class="finput" type="number" min="1" placeholder="Doctor ID" style="width:130px" />
+      <input id="scheduleIdInput" class="finput" type="number" min="1" placeholder="Schedule ID" style="width:130px" />
+      <button class="btn btn-ghost btn-sm" onclick="runFilters()">Filter</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearLoaded()">Clear</button>
+    </div>
+
+    <div class="sec-header">
+      <div>
+        <span class="sec-title">Schedules</span>
+        <span class="pill" id="resultPill">0 results</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="checkHealth()">↻ Refresh Health</button>
+    </div>
+
+    <div id="scheduleArea"></div>
+  </main>
+</div>
+
+<div class="overlay" id="ov-add">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">Create Doctor Schedule</span>
+      <button class="close-btn" onclick="closeModal('ov-add')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="frow">
+        <div class="fg"><label class="flabel">Doctor ID *</label><input id="fDoctorId" class="finput" type="number" min="1" /></div>
+        <div class="fg"><label class="flabel">Hospital ID *</label><input id="fHospitalId" class="finput" type="number" min="1" /></div>
+      </div>
+      <div class="frow">
+        <div class="fg">
+          <label class="flabel">Day Of Week *</label>
+          <select id="fDay" class="finput">
+            <option>MONDAY</option><option>TUESDAY</option><option>WEDNESDAY</option><option>THURSDAY</option><option>FRIDAY</option><option>SATURDAY</option><option>SUNDAY</option>
+          </select>
+        </div>
+        <div class="fg"><label class="flabel">Slot Duration (mins) *</label><input id="fDuration" class="finput" type="number" min="5" value="30" /></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flabel">Start Time *</label><input id="fStart" class="finput" type="time" value="09:00" /></div>
+        <div class="fg"><label class="flabel">End Time *</label><input id="fEnd" class="finput" type="time" value="17:00" /></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('ov-add')">Cancel</button>
+      <button class="btn btn-primary" onclick="createSchedule()">Save Schedule</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-edit">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">Update Doctor Schedule</span>
+      <button class="close-btn" onclick="closeModal('ov-edit')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="frow">
+        <div class="fg"><label class="flabel">Schedule ID</label><input id="eScheduleId" class="finput" type="number" readonly /></div>
+        <div class="fg"><label class="flabel">Doctor ID *</label><input id="eDoctorId" class="finput" type="number" min="1" /></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flabel">Hospital ID *</label><input id="eHospitalId" class="finput" type="number" min="1" /></div>
+        <div class="fg">
+          <label class="flabel">Day Of Week *</label>
+          <select id="eDay" class="finput">
+            <option>MONDAY</option><option>TUESDAY</option><option>WEDNESDAY</option><option>THURSDAY</option><option>FRIDAY</option><option>SATURDAY</option><option>SUNDAY</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flabel">Slot Duration (mins) *</label><input id="eDuration" class="finput" type="number" min="5" /></div>
+        <div class="fg"><label class="flabel">Start Time *</label><input id="eStart" class="finput" type="time" /></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flabel">End Time *</label><input id="eEnd" class="finput" type="time" /></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('ov-edit')">Cancel</button>
+      <button class="btn btn-primary" onclick="updateSchedule()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+  const API_DOCTOR = 'http://localhost:8083';
+  let loadedSchedules = [];
+  let currentView = 'grid';
+
+  function esc(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function toast(msg, ok = true) {
+    const t = document.createElement('div');
+    t.className = 'toast ' + (ok ? 'ok' : 'bad');
+    t.innerHTML = '<span>' + (ok ? '✅' : '❌') + '</span><span>' + msg + '</span>';
+    document.getElementById('toastWrap').prepend(t);
+    setTimeout(() => t.remove(), 3200);
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  async function checkHealth() {
+    try {
+      const res = await fetch(API_DOCTOR + '/v3/api-docs', { signal: AbortSignal.timeout(3000) });
+      const ok = res.ok;
+      document.getElementById('dot').className = 'dot' + (ok ? '' : ' off');
+      document.getElementById('statusTxt').textContent = ok ? 'Doctor Service Online' : 'Doctor Service Error';
+    } catch (e) {
+      document.getElementById('dot').className = 'dot off';
+      document.getElementById('statusTxt').textContent = 'Doctor Service Offline';
+    }
+  }
+
+  function setView(v) {
+    currentView = v;
+    document.getElementById('btnGrid').classList.toggle('active', v === 'grid');
+    document.getElementById('btnTable').classList.toggle('active', v === 'table');
+    applyFilters();
+  }
+
+  function clearLoaded() {
+    loadedSchedules = [];
+    document.getElementById('dayInput').value = '';
+    document.getElementById('doctorIdInput').value = '';
+    document.getElementById('scheduleIdInput').value = '';
+    document.getElementById('globalSearch').value = '';
+    render([]);
+  }
+
+  function mergeSchedules(incoming) {
+    const map = new Map(loadedSchedules.map(s => [s.scheduleId, s]));
+    incoming.forEach(s => map.set(s.scheduleId, s));
+    loadedSchedules = Array.from(map.values());
+  }
+
+  function removeSchedule(scheduleId) {
+    loadedSchedules = loadedSchedules.filter(s => s.scheduleId !== scheduleId);
+  }
+
+  async function loadByDoctor() {
+    const doctorId = document.getElementById('doctorIdInput').value;
+    if (!doctorId) { toast('Enter doctor ID', false); return; }
+    try {
+      const res = await fetch(API_DOCTOR + '/schedules/doctor/' + doctorId);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      mergeSchedules(Array.isArray(data) ? data : []);
+      applyFilters();
+      toast('Loaded schedules for doctor ' + doctorId);
+    } catch (e) {
+      toast('Failed to load schedules: ' + e.message, false);
+    }
+  }
+
+  async function loadBySchedule() {
+    const scheduleId = document.getElementById('scheduleIdInput').value;
+    if (!scheduleId) { toast('Enter schedule ID', false); return; }
+    try {
+      const res = await fetch(API_DOCTOR + '/schedules/' + scheduleId);
+      if (res.status === 404) { toast('Schedule not found', false); return; }
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      mergeSchedules([data]);
+      applyFilters();
+      toast('Loaded schedule ' + scheduleId);
+    } catch (e) {
+      toast('Failed to load schedule: ' + e.message, false);
+    }
+  }
+
+  async function runFilters() {
+    const doctorId = document.getElementById('doctorIdInput').value.trim();
+    const scheduleId = document.getElementById('scheduleIdInput').value.trim();
+
+    if (doctorId) {
+      try {
+        const res = await fetch(API_DOCTOR + '/schedules/doctor/' + doctorId);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        mergeSchedules(Array.isArray(data) ? data : []);
+      } catch (e) {
+        toast('Failed to load by doctor: ' + e.message, false);
+      }
+    }
+
+    if (scheduleId) {
+      try {
+        const res = await fetch(API_DOCTOR + '/schedules/' + scheduleId);
+        if (res.status === 404) {
+          toast('Schedule not found', false);
+        } else if (!res.ok) {
+          throw new Error('HTTP ' + res.status);
+        } else {
+          const data = await res.json();
+          mergeSchedules([data]);
+        }
+      } catch (e) {
+        toast('Failed to load by schedule: ' + e.message, false);
+      }
+    }
+
+    applyFilters();
+  }
+
+  async function getRemaining(scheduleId) {
+    try {
+      const res = await fetch(API_DOCTOR + '/schedules/remaining/' + scheduleId);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      toast('Schedule ' + scheduleId + ' remaining slots: ' + data.remainingSlots);
+    } catch (e) {
+      toast('Could not fetch remaining slots: ' + e.message, false);
+    }
+  }
+
+  async function createSchedule() {
+    const doctorId = Number(document.getElementById('fDoctorId').value);
+    const hospitalId = Number(document.getElementById('fHospitalId').value);
+    const dayOfWeek = document.getElementById('fDay').value;
+    const slotDuration = Number(document.getElementById('fDuration').value);
+    const startTime = document.getElementById('fStart').value;
+    const endTime = document.getElementById('fEnd').value;
+
+    if (!doctorId || !hospitalId || !slotDuration || !startTime || !endTime) {
+      toast('Please complete all required fields', false);
+      return;
+    }
+
+    const payload = { doctorId, hospitalId, dayOfWeek, startTime, endTime, slotDuration };
+
+    try {
+      const res = await fetch(API_DOCTOR + '/schedules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const created = await res.json();
+      mergeSchedules([created]);
+      applyFilters();
+      closeModal('ov-add');
+      toast('Schedule created with ID ' + created.scheduleId);
+    } catch (e) {
+      toast('Create failed: ' + e.message, false);
+    }
+  }
+
+  function applyFilters() {
+    const q = document.getElementById('globalSearch').value.trim().toLowerCase();
+    const day = document.getElementById('dayInput').value;
+    const doctorId = document.getElementById('doctorIdInput').value.trim();
+    const scheduleId = document.getElementById('scheduleIdInput').value.trim();
+    const list = loadedSchedules.filter(s => {
+      if (day && s.dayOfWeek !== day) return false;
+      if (doctorId && String(s.doctorId) !== doctorId) return false;
+      if (scheduleId && String(s.scheduleId) !== scheduleId) return false;
+      if (!q) return true;
+      const text = [s.scheduleId, s.doctorId, s.hospitalId, s.dayOfWeek, s.startTime, s.endTime, s.slotDuration].join(' ').toLowerCase();
+      return text.includes(q);
+    });
+    render(list);
+  }
+
+  function openAddSchedule() {
+    openModal('ov-add');
+  }
+
+  function openEditSchedule(scheduleId) {
+    const current = loadedSchedules.find(s => s.scheduleId === scheduleId);
+    if (!current) {
+      toast('Schedule not found in loaded list', false);
+      return;
+    }
+    document.getElementById('eScheduleId').value = current.scheduleId;
+    document.getElementById('eDoctorId').value = current.doctorId ?? '';
+    document.getElementById('eHospitalId').value = current.hospitalId ?? '';
+    document.getElementById('eDay').value = current.dayOfWeek ?? 'MONDAY';
+    document.getElementById('eDuration').value = current.slotDuration ?? '';
+    document.getElementById('eStart').value = current.startTime ?? '';
+    document.getElementById('eEnd').value = current.endTime ?? '';
+    openModal('ov-edit');
+  }
+
+  async function updateSchedule() {
+    const scheduleId = Number(document.getElementById('eScheduleId').value);
+    const doctorId = Number(document.getElementById('eDoctorId').value);
+    const hospitalId = Number(document.getElementById('eHospitalId').value);
+    const dayOfWeek = document.getElementById('eDay').value;
+    const slotDuration = Number(document.getElementById('eDuration').value);
+    const startTime = document.getElementById('eStart').value;
+    const endTime = document.getElementById('eEnd').value;
+
+    if (!scheduleId || !doctorId || !hospitalId || !slotDuration || !startTime || !endTime) {
+      toast('Please complete all required fields', false);
+      return;
+    }
+
+    const payload = { doctorId, hospitalId, dayOfWeek, startTime, endTime, slotDuration };
+
+    try {
+      const res = await fetch(API_DOCTOR + '/schedules/' + scheduleId, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(await res.text() || ('HTTP ' + res.status));
+      const updated = await res.json();
+      mergeSchedules([updated]);
+      applyFilters();
+      closeModal('ov-edit');
+      toast('Schedule updated: ' + scheduleId);
+    } catch (e) {
+      toast('Update failed: ' + e.message, false);
+    }
+  }
+
+  async function deleteSchedule(scheduleId) {
+    if (!confirm('Delete schedule ' + scheduleId + '?')) return;
+
+    try {
+      const res = await fetch(API_DOCTOR + '/schedules/' + scheduleId, {
+        method: 'DELETE'
+      });
+      if (!res.ok) throw new Error(await res.text() || ('HTTP ' + res.status));
+      removeSchedule(scheduleId);
+      applyFilters();
+      toast('Schedule deleted: ' + scheduleId);
+    } catch (e) {
+      toast('Delete failed: ' + e.message, false);
+    }
+  }
+
+  function render(list) {
+    document.getElementById('resultPill').textContent = list.length + ' result' + (list.length === 1 ? '' : 's');
+
+    const doctors = new Set(list.map(s => s.doctorId));
+
+    document.getElementById('sTotal').textContent = list.length;
+    document.getElementById('sDoctors').textContent = doctors.size;
+
+    if (!list.length) {
+      document.getElementById('scheduleArea').innerHTML = '<div class="empty-box"><div class="empty-ico">📅</div><div class="empty-ttl">No schedules loaded</div><div>Use Doctor ID or Schedule ID filters, or create a new schedule.</div></div>';
+      return;
+    }
+
+    if (currentView === 'table') {
+      document.getElementById('scheduleArea').innerHTML =
+        '<div class="table-wrap"><table><thead><tr><th>Schedule</th><th>Doctor</th><th>Hospital</th><th>Day</th><th>Time</th><th>Duration</th><th>Actions</th></tr></thead><tbody>' +
+        list.map(s => '<tr><td><strong>SCH-' + String(s.scheduleId).padStart(4, '0') + '</strong></td><td>' + esc(s.doctorId) + '</td><td>' + esc(s.hospitalId) + '</td><td>' + esc(s.dayOfWeek) + '</td><td>' + esc(s.startTime) + ' - ' + esc(s.endTime) + '</td><td>' + esc(s.slotDuration) + ' min</td><td><button class="btn btn-ghost btn-sm" onclick="getRemaining(' + s.scheduleId + ')">Remaining</button> <button class="btn btn-ghost btn-sm" onclick="openEditSchedule(' + s.scheduleId + ')">Update</button> <button class="btn btn-danger btn-sm" onclick="deleteSchedule(' + s.scheduleId + ')">Delete</button></td></tr>').join('') +
+        '</tbody></table></div>';
+      return;
+    }
+
+    document.getElementById('scheduleArea').innerHTML =
+      '<div class="cards-grid">' +
+      list.map(s =>
+        '<div class="hcard">' +
+          '<div class="hcard-name">Schedule SCH-' + String(s.scheduleId).padStart(4, '0') + '</div>' +
+          '<div class="hcard-id">Doctor ' + esc(s.doctorId) + ' • Hospital ' + esc(s.hospitalId) + '</div>' +
+          '<div class="info-line"><span class="ico">📆</span>' + esc(s.dayOfWeek) + '</div>' +
+          '<div class="info-line"><span class="ico">🕒</span>' + esc(s.startTime) + ' - ' + esc(s.endTime) + '</div>' +
+          '<div class="info-line"><span class="ico">⏱️</span>' + esc(s.slotDuration) + ' minutes</div>' +
+          '<div class="hcard-footer"><button class="btn btn-ghost btn-sm" onclick="getRemaining(' + s.scheduleId + ')">Check Remaining Slots</button><button class="btn btn-ghost btn-sm" onclick="openEditSchedule(' + s.scheduleId + ')">Update</button><button class="btn btn-danger btn-sm" onclick="deleteSchedule(' + s.scheduleId + ')">Delete</button></div>' +
+        '</div>'
+      ).join('') +
+      '</div>';
+  }
+
+  checkHealth();
+  render([]);
+</script>
+</body>
+</html>
