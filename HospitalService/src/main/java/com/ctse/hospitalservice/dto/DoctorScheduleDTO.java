@@ -19,4 +19,9 @@ public class DoctorScheduleDTO {
     private String startTime;
     private String endTime;
     private int slotDuration;
+
+    // Enriched from User Service
+    private String firstName;
+    private String lastName;
+    private String specialization;
 }
