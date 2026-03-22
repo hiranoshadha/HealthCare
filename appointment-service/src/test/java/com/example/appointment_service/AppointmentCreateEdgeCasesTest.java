@@ -88,7 +88,7 @@ class AppointmentCreateEdgeCasesTest {
 
     @Test
     void createAppointment_scheduleBodyNull_throwsNotFound() {
-        ResponseEntity<Map<String, Object>> resp = new ResponseEntity<>(null, HttpStatus.OK);
+        ResponseEntity<Map<String, Object>> resp = ResponseEntity.ok(null);
         when(restTemplate.exchange(contains("/api/schedules/1"),
                 eq(HttpMethod.GET), eq(null), any(ParameterizedTypeReference.class)))
                 .thenReturn(resp);
