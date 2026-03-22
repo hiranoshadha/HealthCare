@@ -1,5 +1,6 @@
 package com.example.doctor_service.controller;
 
+import com.example.doctor_service.dto.DoctorScheduleRequest;
 import com.example.doctor_service.model.DoctorSchedule;
 import com.example.doctor_service.service.DoctorScheduleService;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,14 @@ public class DoctorScheduleController {
     private final DoctorScheduleService doctorScheduleService;
 
     @PostMapping
-    public ResponseEntity<DoctorSchedule> createSchedule(@RequestBody DoctorSchedule schedule) {
+    public ResponseEntity<DoctorSchedule> createSchedule(@RequestBody DoctorScheduleRequest request) {
+        DoctorSchedule schedule = new DoctorSchedule();
+        schedule.setDoctorId(request.getDoctorId());
+        schedule.setHospitalId(request.getHospitalId());
+        schedule.setDayOfWeek(request.getDayOfWeek());
+        schedule.setStartTime(request.getStartTime());
+        schedule.setEndTime(request.getEndTime());
+        schedule.setSlotDuration(request.getSlotDuration());
         return new ResponseEntity<>(doctorScheduleService.createSchedule(schedule), HttpStatus.CREATED);
     }
 

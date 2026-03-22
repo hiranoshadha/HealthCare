@@ -1,4 +1,4 @@
-package com.example.doctor_service.service.serviceImpl;
+package com.example.doctor_service.service.serviceimpl;
 
 import com.example.doctor_service.model.DoctorSchedule;
 import com.example.doctor_service.repository.DoctorScheduleRepository;
@@ -22,6 +22,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class DoctorScheduleServiceImpl implements DoctorScheduleService {
+
+    private static final String SCHEDULE_NOT_FOUND = "Schedule not found with ID: ";
 
     private final DoctorScheduleRepository doctorScheduleRepository;
     private final RestTemplate restTemplate;
@@ -108,7 +110,7 @@ public class DoctorScheduleServiceImpl implements DoctorScheduleService {
         return doctorScheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "Schedule not found with ID: " + scheduleId
+                        SCHEDULE_NOT_FOUND + scheduleId
                 ));
     }
 
@@ -138,7 +140,7 @@ public class DoctorScheduleServiceImpl implements DoctorScheduleService {
         DoctorSchedule existingSchedule = doctorScheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "Schedule not found with ID: " + scheduleId
+                        SCHEDULE_NOT_FOUND + scheduleId
                 ));
 
         List<DoctorSchedule> schedulesOnDay = doctorScheduleRepository.findByDoctorIdAndDayOfWeek(
@@ -170,7 +172,7 @@ public class DoctorScheduleServiceImpl implements DoctorScheduleService {
         if (!doctorScheduleRepository.existsById(scheduleId)) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
-                    "Schedule not found with ID: " + scheduleId
+                    SCHEDULE_NOT_FOUND + scheduleId
             );
         }
         doctorScheduleRepository.deleteById(scheduleId);
@@ -181,13 +183,13 @@ public class DoctorScheduleServiceImpl implements DoctorScheduleService {
         DoctorSchedule schedule = doctorScheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "Schedule not found with ID: " + scheduleId
+                        SCHEDULE_NOT_FOUND + scheduleId
                 ));
 
         if (schedule.getStartTime() == null || schedule.getEndTime() == null
                 || schedule.getSlotDuration() <= 0) {
             throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    HttpStatus.valueOf(422),
                     "Invalid schedule data for ID: " + scheduleId
             );
         }
@@ -196,7 +198,7 @@ public class DoctorScheduleServiceImpl implements DoctorScheduleService {
 
         if (minutes <= 0) {
             throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    HttpStatus.valueOf(422),
                     "End time must be after start time for schedule ID: " + scheduleId
             );
         }
@@ -223,7 +225,7 @@ public class DoctorScheduleServiceImpl implements DoctorScheduleService {
     public int getRemainingSlots(Long scheduleId) {
         int total = calculateTotalSlots(scheduleId);
         long booked = getBookedSlots(scheduleId);
-        return (int) Math.max((long) total - booked, 0L);
+        return (int) Math.max(total - booked, 0L);
     }
 
     private void validateScheduleInput(DoctorSchedule schedule) {

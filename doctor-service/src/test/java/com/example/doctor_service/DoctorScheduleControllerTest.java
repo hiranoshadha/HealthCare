@@ -1,6 +1,7 @@
 package com.example.doctor_service;
 
 import com.example.doctor_service.controller.DoctorScheduleController;
+import com.example.doctor_service.dto.DoctorScheduleRequest;
 import com.example.doctor_service.exception.ResourceNotFoundException;
 import com.example.doctor_service.model.DoctorSchedule;
 import com.example.doctor_service.service.DoctorScheduleService;
@@ -19,7 +20,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,7 +49,15 @@ class DoctorScheduleControllerTest {
     void createSchedule_returns201() {
         when(doctorScheduleService.createSchedule(any(DoctorSchedule.class))).thenReturn(schedule);
 
-        ResponseEntity<DoctorSchedule> response = doctorScheduleController.createSchedule(schedule);
+        DoctorScheduleRequest request = new DoctorScheduleRequest();
+        request.setDoctorId(schedule.getDoctorId());
+        request.setHospitalId(schedule.getHospitalId());
+        request.setDayOfWeek(schedule.getDayOfWeek());
+        request.setStartTime(schedule.getStartTime());
+        request.setEndTime(schedule.getEndTime());
+        request.setSlotDuration(schedule.getSlotDuration());
+
+        ResponseEntity<DoctorSchedule> response = doctorScheduleController.createSchedule(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody()).isEqualTo(schedule);
@@ -134,7 +142,7 @@ class DoctorScheduleControllerTest {
         updated.setEndTime(LocalTime.of(17, 0));
         updated.setSlotDuration(30);
 
-        when(doctorScheduleService.updateScheduleDay(eq(1L), eq(DayOfWeek.WEDNESDAY))).thenReturn(updated);
+        when(doctorScheduleService.updateScheduleDay(1L, DayOfWeek.WEDNESDAY)).thenReturn(updated);
 
         ResponseEntity<DoctorSchedule> response = doctorScheduleController.updateScheduleDay(1L, DayOfWeek.WEDNESDAY);
 
