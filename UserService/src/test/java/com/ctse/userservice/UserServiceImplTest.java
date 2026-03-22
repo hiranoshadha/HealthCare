@@ -56,17 +56,21 @@ class UserServiceImplTest {
     void setUp() {
         user = new User(1L, "johndoe", "hashedPassword", "PATIENT");
 
-        patient = new Patient(
-                1L, "John", "Doe", "1990-05-15", "Male", "O+",
-                "123 Main St", "john@email.com", "0771234567",
-                "Jane Doe", "0771234568", "No allergies", 1L, user
-        );
+        patient = Patient.builder()
+                .patientId(1L).firstName("John").lastName("Doe")
+                .dateOfBirth("1990-05-15").gender("Male").bloodGroup("O+")
+                .address("123 Main St").email("john@email.com").phoneNumber("0771234567")
+                .emergencyContactName("Jane Doe").emergencyContactPhone("0771234568")
+                .medicalNotes("No allergies").userId(1L).user(user)
+                .build();
 
-        patientDTO = new PatientDTO(
-                1L, "John", "Doe", "1990-05-15", "Male", "O+",
-                "123 Main St", "john@email.com", "0771234567",
-                "Jane Doe", "0771234568", "No allergies", 1L, "johndoe", "PATIENT"
-        );
+        patientDTO = PatientDTO.builder()
+                .patientId(1L).firstName("John").lastName("Doe")
+                .dateOfBirth("1990-05-15").gender("Male").bloodGroup("O+")
+                .address("123 Main St").email("john@email.com").phoneNumber("0771234567")
+                .emergencyContactName("Jane Doe").emergencyContactPhone("0771234568")
+                .medicalNotes("No allergies").userId(1L).username("johndoe").role("PATIENT")
+                .build();
 
         doctor = new Doctor(
                 1L, "Dr. Ishan", "Madusanka", "Dermatology",
@@ -153,11 +157,13 @@ class UserServiceImplTest {
 
     @Test
     void getAllPatients_returnsList() {
-        Patient patient2 = new Patient(
-                2L, "Jane", "Smith", "1992-03-20", "Female", "B+",
-                "456 Oak Ave", "jane@email.com", "0772345678",
-                "John Smith", "0772345679", "No conditions", 3L, user
-        );
+        Patient patient2 = Patient.builder()
+                .patientId(2L).firstName("Jane").lastName("Smith")
+                .dateOfBirth("1992-03-20").gender("Female").bloodGroup("B+")
+                .address("456 Oak Ave").email("jane@email.com").phoneNumber("0772345678")
+                .emergencyContactName("John Smith").emergencyContactPhone("0772345679")
+                .medicalNotes("No conditions").userId(3L).user(user)
+                .build();
         when(patientRepository.findAll()).thenReturn(List.of(patient, patient2));
 
         List<PatientDTO> result = userService.getAllPatients();
@@ -180,16 +186,20 @@ class UserServiceImplTest {
 
     @Test
     void updatePatient_success() {
-        Patient updated = new Patient(
-                1L, "John", "Doe", "1990-05-15", "Male", "A+",
-                "999 New St", "john@email.com", "0771234567",
-                "Jane Doe", "0771234568", "Updated Notes", 1L, user
-        );
-        PatientDTO updateDTO = new PatientDTO(
-                null, "John", "Doe", "1990-05-15", "Male", "A+",
-                "999 New St", "john@email.com", "0771234567",
-                "Jane Doe", "0771234568", "Updated Notes", 1L, "johndoe", "PATIENT"
-        );
+        Patient updated = Patient.builder()
+                .patientId(1L).firstName("John").lastName("Doe")
+                .dateOfBirth("1990-05-15").gender("Male").bloodGroup("A+")
+                .address("999 New St").email("john@email.com").phoneNumber("0771234567")
+                .emergencyContactName("Jane Doe").emergencyContactPhone("0771234568")
+                .medicalNotes("Updated Notes").userId(1L).user(user)
+                .build();
+        PatientDTO updateDTO = PatientDTO.builder()
+                .firstName("John").lastName("Doe")
+                .dateOfBirth("1990-05-15").gender("Male").bloodGroup("A+")
+                .address("999 New St").email("john@email.com").phoneNumber("0771234567")
+                .emergencyContactName("Jane Doe").emergencyContactPhone("0771234568")
+                .medicalNotes("Updated Notes").userId(1L).username("johndoe").role("PATIENT")
+                .build();
 
         when(patientRepository.findById(1L)).thenReturn(Optional.of(patient));
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));

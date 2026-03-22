@@ -46,6 +46,29 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
+    private void copyPatientFields(Patient patient, PatientDTO dto) {
+        patient.setFirstName(dto.getFirstName());
+        patient.setLastName(dto.getLastName());
+        patient.setDateOfBirth(dto.getDateOfBirth());
+        patient.setGender(dto.getGender());
+        patient.setBloodGroup(dto.getBloodGroup());
+        patient.setAddress(dto.getAddress());
+        patient.setEmail(dto.getEmail());
+        patient.setPhoneNumber(dto.getPhoneNumber());
+        patient.setEmergencyContactName(dto.getEmergencyContactName());
+        patient.setEmergencyContactPhone(dto.getEmergencyContactPhone());
+        patient.setMedicalNotes(dto.getMedicalNotes());
+    }
+
+    private void copyDoctorFields(Doctor doctor, DoctorDTO dto) {
+        doctor.setFirstName(dto.getFirstName());
+        doctor.setLastName(dto.getLastName());
+        doctor.setSpecialization(dto.getSpecialization());
+        doctor.setLicenseNumber(dto.getLicenseNumber());
+        doctor.setEmail(dto.getEmail());
+        doctor.setPhoneNumber(dto.getPhoneNumber());
+    }
+
     private PatientDTO mapToPatientDTO(Patient patient) {
         PatientDTO dto = new PatientDTO();
         dto.setPatientId(patient.getPatientId());
@@ -128,17 +151,7 @@ public class UserServiceImpl implements UserService {
 
         // Create patient
         Patient patient = new Patient();
-        patient.setFirstName(patientDTO.getFirstName());
-        patient.setLastName(patientDTO.getLastName());
-        patient.setDateOfBirth(patientDTO.getDateOfBirth());
-        patient.setGender(patientDTO.getGender());
-        patient.setBloodGroup(patientDTO.getBloodGroup());
-        patient.setAddress(patientDTO.getAddress());
-        patient.setEmail(patientDTO.getEmail());
-        patient.setPhoneNumber(patientDTO.getPhoneNumber());
-        patient.setEmergencyContactName(patientDTO.getEmergencyContactName());
-        patient.setEmergencyContactPhone(patientDTO.getEmergencyContactPhone());
-        patient.setMedicalNotes(patientDTO.getMedicalNotes());
+        copyPatientFields(patient, patientDTO);
         patient.setUserId(savedUser.getUserId());
 
         Patient savedPatient = patientRepository.save(patient);
@@ -171,17 +184,7 @@ public class UserServiceImpl implements UserService {
         Patient patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException(PATIENT_NOT_FOUND));
 
-        patient.setFirstName(patientDTO.getFirstName());
-        patient.setLastName(patientDTO.getLastName());
-        patient.setDateOfBirth(patientDTO.getDateOfBirth());
-        patient.setGender(patientDTO.getGender());
-        patient.setBloodGroup(patientDTO.getBloodGroup());
-        patient.setAddress(patientDTO.getAddress());
-        patient.setEmail(patientDTO.getEmail());
-        patient.setPhoneNumber(patientDTO.getPhoneNumber());
-        patient.setEmergencyContactName(patientDTO.getEmergencyContactName());
-        patient.setEmergencyContactPhone(patientDTO.getEmergencyContactPhone());
-        patient.setMedicalNotes(patientDTO.getMedicalNotes());
+        copyPatientFields(patient, patientDTO);
 
         // Update username if provided
         if (patientDTO.getUsername() != null && patient.getUserId() != null) {
@@ -216,12 +219,7 @@ public class UserServiceImpl implements UserService {
 
         // Create doctor
         Doctor doctor = new Doctor();
-        doctor.setFirstName(doctorDTO.getFirstName());
-        doctor.setLastName(doctorDTO.getLastName());
-        doctor.setSpecialization(doctorDTO.getSpecialization());
-        doctor.setLicenseNumber(doctorDTO.getLicenseNumber());
-        doctor.setEmail(doctorDTO.getEmail());
-        doctor.setPhoneNumber(doctorDTO.getPhoneNumber());
+        copyDoctorFields(doctor, doctorDTO);
         doctor.setUserId(savedUser.getUserId());
 
         Doctor savedDoctor = doctorRepository.save(doctor);
@@ -254,12 +252,7 @@ public class UserServiceImpl implements UserService {
         Doctor doctor = doctorRepository.findById(doctorId)
                 .orElseThrow(() -> new ResourceNotFoundException(DOCTOR_NOT_FOUND));
 
-        doctor.setFirstName(doctorDTO.getFirstName());
-        doctor.setLastName(doctorDTO.getLastName());
-        doctor.setSpecialization(doctorDTO.getSpecialization());
-        doctor.setLicenseNumber(doctorDTO.getLicenseNumber());
-        doctor.setEmail(doctorDTO.getEmail());
-        doctor.setPhoneNumber(doctorDTO.getPhoneNumber());
+        copyDoctorFields(doctor, doctorDTO);
 
         // Update username if provided
         if (doctorDTO.getUsername() != null && doctor.getUserId() != null) {

@@ -38,12 +38,13 @@ class UserControllerTest {
 
     @BeforeEach
     void setUp() {
-        patientDTO = new PatientDTO(
-                1L, "John", "Doe", "1990-05-15", "Male", "O+",
-                "123 Main St", "john@email.com", "0771234567",
-                "Jane Doe", "0771234568", "No allergies",
-                1L, "johndoe", "PATIENT"
-        );
+        patientDTO = PatientDTO.builder()
+                .patientId(1L).firstName("John").lastName("Doe")
+                .dateOfBirth("1990-05-15").gender("Male").bloodGroup("O+")
+                .address("123 Main St").email("john@email.com").phoneNumber("0771234567")
+                .emergencyContactName("Jane Doe").emergencyContactPhone("0771234568")
+                .medicalNotes("No allergies").userId(1L).username("johndoe").role("PATIENT")
+                .build();
 
         doctorDTO = new DoctorDTO(
                 1L, "Dr. Ishan", "Madusanka", "Dermatology",
@@ -116,12 +117,13 @@ class UserControllerTest {
 
     @Test
     void getAllPatients_returns200() {
-        PatientDTO patient2 = new PatientDTO(
-                2L, "Jane", "Smith", "1992-03-20", "Female", "B+",
-                "456 Oak Ave", "jane@email.com", "0772345678",
-                "John Smith", "0772345679", "No conditions",
-                3L, "janesmith", "PATIENT"
-        );
+        PatientDTO patient2 = PatientDTO.builder()
+                .patientId(2L).firstName("Jane").lastName("Smith")
+                .dateOfBirth("1992-03-20").gender("Female").bloodGroup("B+")
+                .address("456 Oak Ave").email("jane@email.com").phoneNumber("0772345678")
+                .emergencyContactName("John Smith").emergencyContactPhone("0772345679")
+                .medicalNotes("No conditions").userId(3L).username("janesmith").role("PATIENT")
+                .build();
         when(userService.getAllPatients()).thenReturn(List.of(patientDTO, patient2));
 
         ResponseEntity<List<PatientDTO>> response = userController.getAllPatients();
@@ -132,12 +134,13 @@ class UserControllerTest {
 
     @Test
     void updatePatient_returns200() {
-        PatientDTO updated = new PatientDTO(
-                1L, "John", "Doe", "1990-05-15", "Male", "A+",
-                "999 New St", "newemail@email.com", "0779999999",
-                "Jane Doe", "0771234568", "Updated notes",
-                1L, "johndoe", "PATIENT"
-        );
+        PatientDTO updated = PatientDTO.builder()
+                .patientId(1L).firstName("John").lastName("Doe")
+                .dateOfBirth("1990-05-15").gender("Male").bloodGroup("A+")
+                .address("999 New St").email("newemail@email.com").phoneNumber("0779999999")
+                .emergencyContactName("Jane Doe").emergencyContactPhone("0771234568")
+                .medicalNotes("Updated notes").userId(1L).username("johndoe").role("PATIENT")
+                .build();
         when(userService.updatePatient(eq(1L), any(PatientDTO.class))).thenReturn(updated);
 
         ResponseEntity<PatientDTO> response = userController.updatePatient(1L, updated);
