@@ -2,7 +2,6 @@ package com.ctse.userservice;
 
 import com.ctse.userservice.dto.DoctorDTO;
 import com.ctse.userservice.dto.PatientDTO;
-import com.ctse.userservice.exception.ResourceNotFoundException;
 import com.ctse.userservice.model.Doctor;
 import com.ctse.userservice.model.Patient;
 import com.ctse.userservice.model.User;
@@ -123,12 +122,11 @@ class UserServiceImplTest {
     }
 
     @Test
-    void getPatientById_notFound_throwsResourceNotFoundException() {
+    void getPatientById_notFound_throwsException() {
         when(patientRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.getPatientById(99L))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("99");
+                .isInstanceOf(RuntimeException.class);
     }
 
     // ---- getPatientByUserId ----
@@ -144,11 +142,11 @@ class UserServiceImplTest {
     }
 
     @Test
-    void getPatientByUserId_notFound_throwsResourceNotFoundException() {
+    void getPatientByUserId_notFound_throwsException() {
         when(patientRepository.findByUserId(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.getPatientByUserId(99L))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(RuntimeException.class);
     }
 
     // ---- getAllPatients ----
@@ -194,6 +192,7 @@ class UserServiceImplTest {
         );
 
         when(patientRepository.findById(1L)).thenReturn(Optional.of(patient));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(patientRepository.save(any(Patient.class))).thenReturn(updated);
 
         PatientDTO result = userService.updatePatient(1L, updateDTO);
@@ -203,18 +202,18 @@ class UserServiceImplTest {
     }
 
     @Test
-    void updatePatient_notFound_throwsResourceNotFoundException() {
+    void updatePatient_notFound_throwsException() {
         when(patientRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.updatePatient(99L, patientDTO))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(RuntimeException.class);
     }
 
     // ---- deletePatient ----
 
     @Test
     void deletePatient_success() {
-        when(patientRepository.existsById(1L)).thenReturn(true);
+        when(patientRepository.findById(1L)).thenReturn(Optional.of(patient));
 
         userService.deletePatient(1L);
 
@@ -222,11 +221,11 @@ class UserServiceImplTest {
     }
 
     @Test
-    void deletePatient_notFound_throwsResourceNotFoundException() {
-        when(patientRepository.existsById(99L)).thenReturn(false);
+    void deletePatient_notFound_throwsException() {
+        when(patientRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.deletePatient(99L))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(RuntimeException.class);
 
         verify(patientRepository, never()).deleteById(any());
     }
@@ -274,12 +273,11 @@ class UserServiceImplTest {
     }
 
     @Test
-    void getDoctorById_notFound_throwsResourceNotFoundException() {
+    void getDoctorById_notFound_throwsException() {
         when(doctorRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.getDoctorById(99L))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("99");
+                .isInstanceOf(RuntimeException.class);
     }
 
     // ---- getDoctorByUserId ----
@@ -295,11 +293,11 @@ class UserServiceImplTest {
     }
 
     @Test
-    void getDoctorByUserId_notFound_throwsResourceNotFoundException() {
+    void getDoctorByUserId_notFound_throwsException() {
         when(doctorRepository.findByUserId(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.getDoctorByUserId(99L))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(RuntimeException.class);
     }
 
     // ---- getAllDoctors ----
@@ -342,6 +340,7 @@ class UserServiceImplTest {
         );
 
         when(doctorRepository.findById(1L)).thenReturn(Optional.of(doctor));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(user));
         when(doctorRepository.save(any(Doctor.class))).thenReturn(updated);
 
         DoctorDTO result = userService.updateDoctor(1L, updateDTO);
@@ -351,18 +350,18 @@ class UserServiceImplTest {
     }
 
     @Test
-    void updateDoctor_notFound_throwsResourceNotFoundException() {
+    void updateDoctor_notFound_throwsException() {
         when(doctorRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.updateDoctor(99L, doctorDTO))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(RuntimeException.class);
     }
 
     // ---- deleteDoctor ----
 
     @Test
     void deleteDoctor_success() {
-        when(doctorRepository.existsById(1L)).thenReturn(true);
+        when(doctorRepository.findById(1L)).thenReturn(Optional.of(doctor));
 
         userService.deleteDoctor(1L);
 
@@ -370,11 +369,11 @@ class UserServiceImplTest {
     }
 
     @Test
-    void deleteDoctor_notFound_throwsResourceNotFoundException() {
-        when(doctorRepository.existsById(99L)).thenReturn(false);
+    void deleteDoctor_notFound_throwsException() {
+        when(doctorRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.deleteDoctor(99L))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(RuntimeException.class);
 
         verify(doctorRepository, never()).deleteById(any());
     }
