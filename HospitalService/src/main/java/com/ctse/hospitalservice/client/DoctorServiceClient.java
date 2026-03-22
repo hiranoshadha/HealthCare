@@ -27,7 +27,7 @@ public class DoctorServiceClient {
 
     public List<DoctorScheduleDTO> getSchedulesByHospitalId(Long hospitalId) {
         try {
-            String url = doctorServiceUrl + "/schedules/hospital/" + hospitalId;
+            String url = doctorServiceUrl + "/api/schedules/hospital/" + hospitalId;
             DoctorScheduleDTO[] schedules = restTemplate.getForObject(url, DoctorScheduleDTO[].class);
             return schedules != null ? Arrays.asList(schedules) : Collections.emptyList();
         } catch (Exception ex) {
