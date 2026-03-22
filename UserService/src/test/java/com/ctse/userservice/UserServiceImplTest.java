@@ -79,7 +79,7 @@ class UserServiceImplTest {
 
         doctorDTO = new DoctorDTO(
                 1L, "Dr. Ishan", "Madusanka", "Dermatology",
-                "LIC123456", "ishan@hospital.com", "0771234567", 2L, "ishan_doc", "DOCTOR"
+                "LIC123456", "ishan@hospital.com", "0771234567", 2L, "ishan_doc", "DOCTOR", null
         );
     }
 
@@ -346,7 +346,7 @@ class UserServiceImplTest {
         );
         DoctorDTO updateDTO = new DoctorDTO(
                 null, "Dr. Ishan", "Madusanka", "Neurology",
-                "LIC999999", "ishan.updated@hospital.com", "0779999999", 2L, "ishan_doc", "DOCTOR"
+                "LIC999999", "ishan.updated@hospital.com", "0779999999", 2L, "ishan_doc", "DOCTOR", null
         );
 
         when(doctorRepository.findById(1L)).thenReturn(Optional.of(doctor));

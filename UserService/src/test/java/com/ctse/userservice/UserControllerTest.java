@@ -49,7 +49,7 @@ class UserControllerTest {
         doctorDTO = new DoctorDTO(
                 1L, "Dr. Ishan", "Madusanka", "Dermatology",
                 "LIC123456", "ishan@hospital.com", "0771234567",
-                2L, "ishan_doc", "DOCTOR"
+                2L, "ishan_doc", "DOCTOR", null
         );
 
         loginDTO = new LoginDTO("johndoe", "password123");
@@ -193,7 +193,7 @@ class UserControllerTest {
         DoctorDTO doctor2 = new DoctorDTO(
                 2L, "Dr. Amara", "Wijesinghe", "Cardiology",
                 "LIC789012", "amara@hospital.com", "0779876543",
-                3L, "amara_doc", "DOCTOR"
+                3L, "amara_doc", "DOCTOR", null
         );
         when(userService.getAllDoctors()).thenReturn(List.of(doctorDTO, doctor2));
 
@@ -208,7 +208,7 @@ class UserControllerTest {
         DoctorDTO updated = new DoctorDTO(
                 1L, "Dr. Ishan", "Madusanka", "Neurology",
                 "LIC999999", "ishan.updated@hospital.com", "0779999999",
-                2L, "ishan_doc", "DOCTOR"
+                2L, "ishan_doc", "DOCTOR", null
         );
         when(userService.updateDoctor(eq(1L), any(DoctorDTO.class))).thenReturn(updated);
 
