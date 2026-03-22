@@ -1,6 +1,7 @@
 package com.ctse.userservice.controller;
 
 import com.ctse.userservice.dto.DoctorDTO;
+import com.ctse.userservice.dto.LoginDTO;
 import com.ctse.userservice.dto.PatientDTO;
 import com.ctse.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -17,13 +18,11 @@ public class UserController {
 
     private final UserService userService;
 
-    // Login endpoint
     @PostMapping("/login")
-    public ResponseEntity<Object> login(@RequestBody String userName, String password) {
-        return ResponseEntity.ok(userService.login(userName, password));
+    public ResponseEntity<Object> login(@RequestBody LoginDTO loginDTO) {
+        return ResponseEntity.ok(userService.login(loginDTO.getUsername(), loginDTO.getPassword()));
     }
 
-    // Patient endpoints
     @PostMapping("/patients")
     public ResponseEntity<PatientDTO> createPatient(@RequestBody PatientDTO patientDTO,
                                                     @RequestParam String password) {
@@ -57,7 +56,6 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    // Doctor endpoints
     @PostMapping("/doctors")
     public ResponseEntity<DoctorDTO> createDoctor(@RequestBody DoctorDTO doctorDTO,
                                                   @RequestParam String password) {
