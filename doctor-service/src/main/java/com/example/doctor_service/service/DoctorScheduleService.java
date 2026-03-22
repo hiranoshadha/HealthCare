@@ -69,6 +69,8 @@ public class DoctorScheduleService {
 
     public List<DoctorSchedule> getSchedulesByHospitalId(Long hospitalId) {
         return repository.findByHospitalId(hospitalId);
+    }
+
     public DoctorSchedule updateScheduleDay(Long scheduleId, DayOfWeek dayOfWeek) {
         if (dayOfWeek == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "dayOfWeek is required");
