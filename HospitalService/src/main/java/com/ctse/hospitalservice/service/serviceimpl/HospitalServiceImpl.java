@@ -1,6 +1,8 @@
 package com.ctse.hospitalservice.service.serviceimpl;
 
+import com.ctse.hospitalservice.client.DoctorServiceClient;
 import com.ctse.hospitalservice.client.UserServiceClient;
+import com.ctse.hospitalservice.dto.DoctorInfoDTO;
 import com.ctse.hospitalservice.dto.HospitalDTO;
 import com.ctse.hospitalservice.dto.HospitalWithDoctorsDTO;
 import com.ctse.hospitalservice.exception.ResourceNotFoundException;
@@ -12,6 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +26,7 @@ public class HospitalServiceImpl implements HospitalService {
     private static final String HOSPITAL_NOT_FOUND = "Hospital not found with id: ";
 
     private final HospitalRepository hospitalRepository;
+    private final DoctorServiceClient doctorServiceClient;
     private final UserServiceClient userServiceClient;
 
     private HospitalDTO mapToDTO(Hospital hospital) {
@@ -107,7 +113,22 @@ public class HospitalServiceImpl implements HospitalService {
         dto.setCity(hospital.getCity());
         dto.setContactNumber(hospital.getContactNumber());
         dto.setEmail(hospital.getEmail());
-        dto.setDoctors(userServiceClient.getAllDoctors());
+        List<com.ctse.hospitalservice.dto.DoctorScheduleDTO> schedules =
+                doctorServiceClient.getSchedulesByHospitalId(hospitalId);
+
+        Map<Long, DoctorInfoDTO> doctorMap = userServiceClient.getAllDoctors().stream()
+                .collect(Collectors.toMap(DoctorInfoDTO::getDoctorId, Function.identity(), (a, b) -> a));
+
+        schedules.forEach(s -> {
+            DoctorInfoDTO info = doctorMap.get(s.getDoctorId());
+            if (info != null) {
+                s.setFirstName(info.getFirstName());
+                s.setLastName(info.getLastName());
+                s.setSpecialization(info.getSpecialization());
+            }
+        });
+
+        dto.setDoctors(schedules);
 
         return dto;
     }

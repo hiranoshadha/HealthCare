@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Appointments - MediConnect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #0ea5e9;
+      --primary-dark: #0284c7;
+      --secondary: #06b6d4;
+      --accent: #8b5cf6;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --bg: #080f1a;
+      --bg-card: #0f1c2e;
+      --bg-card2: #162033;
+      --border: #1e3248;
+      --border-light: #243a52;
+      --text: #e8f4fd;
+      --text-muted: #7ea8c9;
+      --text-dim: #3d6080;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 256px; background: var(--bg-card); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 200;
+    }
+    .logo {
+      padding: 28px 20px 24px; display: flex; align-items: center; gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo-icon {
+      width: 42px; height: 42px; border-radius: 12px; font-size: 20px;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      box-shadow: 0 0 20px rgba(14,165,233,.35);
+    }
+    .logo-name {
+      font-size: 17px; font-weight: 800;
+      background: linear-gradient(135deg, #e0f2ff, var(--primary));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .logo-sub { font-size: 10px; color: var(--text-dim); font-weight: 500; letter-spacing: .5px; }
+    .nav { flex: 1; padding: 20px 12px; overflow-y: auto; }
+    .nav-item {
+      display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 10px;
+      cursor: pointer; color: var(--text-muted); font-size: 13.5px; font-weight: 500;
+      transition: all .2s; margin-bottom: 2px; text-decoration: none;
+    }
+    .nav-item:hover { background: rgba(14,165,233,.08); color: var(--primary); }
+    .nav-item.active {
+      background: linear-gradient(135deg, rgba(14,165,233,.15), rgba(139,92,246,.08));
+      color: var(--primary); border: 1px solid rgba(14,165,233,.18);
+    }
+    .nav-icon { font-size: 17px; width: 20px; text-align: center; }
+    .nav-section-label {
+      font-size: 10px; font-weight: 700; color: var(--text-dim);
+      text-transform: uppercase; letter-spacing: 1.2px; padding: 0 10px; margin: 20px 0 8px;
+    }
+    .sys-btn {
+      display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px;
+      font-size: 13px; font-weight: 600; text-decoration: none; margin-bottom: 6px;
+      transition: all .2s; position: relative; overflow: hidden;
+    }
+    .sys-btn::before { content: ''; position: absolute; inset: 0; opacity: 0; transition: opacity .2s; }
+    .sys-btn:hover::before { opacity: 1; }
+    .sys-btn-docs { background: rgba(139,92,246,.08); border: 1px solid rgba(139,92,246,.2); color: var(--accent); }
+    .sys-btn-docs::before { background: rgba(139,92,246,.08); }
+    .sys-btn-docs:hover { border-color: rgba(139,92,246,.4); box-shadow: 0 4px 16px rgba(139,92,246,.15); transform: translateX(3px); }
+    .sys-btn-health { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2); color: #f87171; }
+    .sys-btn-health::before { background: rgba(239,68,68,.08); }
+    .sys-btn-health:hover { border-color: rgba(239,68,68,.4); box-shadow: 0 4px 16px rgba(239,68,68,.15); transform: translateX(3px); }
+    .sys-btn-arrow { margin-left: auto; font-size: 12px; opacity: .5; }
+    .sidebar-bottom { padding: 16px 20px; border-top: 1px solid var(--border); }
+    .api-badge { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 6px var(--success); animation: blink 2s infinite; }
+    .dot.off { background: var(--danger); box-shadow: 0 0 6px var(--danger); animation: none; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    .main { margin-left: 256px; flex: 1; padding: 36px 36px 60px; min-height: 100vh; }
+    .topbar { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; gap: 18px; }
+    .page-title {
+      font-size: 30px; font-weight: 900; line-height: 1.1;
+      background: linear-gradient(135deg, #d9f0ff 10%, var(--primary) 60%, var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .page-sub { font-size: 14px; color: var(--text-muted); margin-top: 6px; }
+
+    .search-wrap { position: relative; }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 15px; }
+    .search-input {
+      background: var(--bg-card); border: 1px solid var(--border); color: var(--text);
+      padding: 10px 14px 10px 38px; border-radius: 10px; font-size: 13.5px; width: 250px;
+      font-family: inherit; outline: none; transition: all .2s;
+    }
+    .search-input::placeholder { color: var(--text-dim); }
+    .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14,165,233,.12); }
+
+    .view-toggle {
+      display: flex; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 3px; gap: 2px;
+    }
+    .view-btn {
+      padding: 6px 12px; border-radius: 8px; border: none; background: transparent; color: var(--text-muted);
+      font-size: 14px; cursor: pointer; transition: all .2s;
+    }
+    .view-btn.active { background: var(--bg-card); color: var(--primary); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px; padding: 10px 18px; border-radius: 10px;
+      font-size: 13.5px; font-weight: 600; cursor: pointer; border: none; font-family: inherit;
+      transition: all .2s; white-space: nowrap;
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; box-shadow: 0 4px 18px rgba(14,165,233,.3); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(14,165,233,.45); }
+    .btn-danger { background: rgba(239,68,68,.14); color: #ff9d9d; border: 1px solid rgba(239,68,68,.35); }
+    .btn-danger:hover { background: rgba(239,68,68,.2); color: #ffd0d0; }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--bg-card2); color: var(--text); }
+    .btn-sm { padding: 7px 13px; font-size: 12.5px; border-radius: 8px; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-bottom: 28px; }
+    .stat-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 22px;
+      position: relative; overflow: hidden;
+    }
+    .stat-glow { position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; border-radius: 50%; filter: blur(30px); opacity: .15; }
+    .stat-card.c1 .stat-glow { background: var(--primary); }
+    .stat-card.c2 .stat-glow { background: var(--secondary); }
+    .stat-card.c3 .stat-glow { background: var(--accent); }
+    .stat-card.c4 .stat-glow { background: var(--warning); }
+    .stat-chip { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; font-size: 21px; margin-bottom: 18px; }
+    .stat-card.c1 .stat-chip { background: rgba(14,165,233,.12); }
+    .stat-card.c2 .stat-chip { background: rgba(6,182,212,.12); }
+    .stat-card.c3 .stat-chip { background: rgba(139,92,246,.12); }
+    .stat-card.c4 .stat-chip { background: rgba(245,158,11,.12); }
+    .stat-val { font-size: 34px; font-weight: 900; line-height: 1; margin-bottom: 6px; }
+    .stat-card.c1 .stat-val { color: var(--primary); }
+    .stat-card.c2 .stat-val { color: var(--secondary); }
+    .stat-card.c3 .stat-val { color: var(--accent); }
+    .stat-card.c4 .stat-val { color: var(--warning); }
+    .stat-lbl { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+
+    .panel {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 18px;
+    }
+    .panel.hidden { display: none; }
+    .panel-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+    .frow { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .fg { margin-bottom: 12px; }
+    .flabel { display: block; font-size: 12.5px; font-weight: 600; color: var(--text-muted); margin-bottom: 7px; }
+    .finput {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      padding: 10px 13px; border-radius: 10px; font-size: 13.5px; font-family: inherit; outline: none;
+    }
+    .finput:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14,165,233,.1); }
+
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+    .hcard { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 22px; }
+    .hcard-name { font-size: 16px; font-weight: 700; margin-bottom: 3px; }
+    .hcard-id { font-size: 11px; color: var(--text-dim); margin-bottom: 14px; }
+    .info-line { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+    .hcard-footer { display: flex; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+
+    .table-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-top: 10px; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: var(--bg-card2); }
+    th { text-align: left; padding: 14px 18px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .8px; border-bottom: 1px solid var(--border); }
+    td { padding: 14px 18px; font-size: 13.5px; border-bottom: 1px solid var(--border); color: var(--text); }
+
+    .toast-wrap { position: fixed; top: 22px; right: 22px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast { background: var(--bg-card2); border: 1px solid var(--border-light); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 11px; font-size: 13.5px; min-width: 260px; }
+    .toast.ok { border-left: 3px solid var(--success); }
+    .toast.bad { border-left: 3px solid var(--danger); }
+
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); backdrop-filter: blur(6px); z-index: 999; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; visibility: hidden; transition: all .3s; }
+    .overlay.open { opacity: 1; visibility: visible; }
+    .modal {
+      background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 20px; width: 100%; max-width: 620px;
+      box-shadow: 0 30px 100px rgba(0,0,0,.6); transform: translateY(24px) scale(.97); transition: all .3s;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .overlay.open .modal { transform: translateY(0) scale(1); }
+    .modal-head { padding: 24px 24px 0; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--bg-card); z-index: 1; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .modal-title { font-size: 19px; font-weight: 700; }
+    .close-btn { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; font-size: 17px; }
+    .modal-body { padding: 22px 24px; }
+    .modal-foot { padding: 0 24px 24px; display: flex; gap: 10px; justify-content: flex-end; }
+
+    .empty-box { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+
+    @media (max-width: 1100px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 700px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 20px; }
+      .topbar { flex-direction: column; }
+      .frow { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🏥</div>
+      <div>
+        <div class="logo-name">MediConnect</div>
+        <div class="logo-sub">Client Portal</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a class="nav-item" href="Index.html"><span class="nav-icon">👤</span> Users</a>
+      <a class="nav-item" href="hospital.html"><span class="nav-icon">🏥</span> Hospitals</a>
+      <a class="nav-item" href="doctor.html"><span class="nav-icon">👨‍⚕️</span> Doctor</a>
+      <a class="nav-item active" href="appointment.html"><span class="nav-icon">📋</span> Appointment</a>
+    </nav>
+    <div style="padding: 12px 12px 0;">
+      <div class="nav-section-label" style="padding:0 2px; margin-bottom:8px">System</div>
+      <a class="sys-btn sys-btn-docs" href="http://localhost:8084/swagger-ui.html" target="_blank"><span>📄 Appointment API Docs</span><span class="sys-btn-arrow">↗</span></a>
+      <a class="sys-btn sys-btn-health" href="http://localhost:8084/actuator/health" target="_blank"><span>💓 Appointment Health</span><span class="sys-btn-arrow">↗</span></a>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="api-badge">
+        <div class="dot" id="dot"></div>
+        <span id="statusTxt">Checking...</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">Appointments</h1>
+        <p class="page-sub">Manage All Appointments </p>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input id="globalSearch" class="search-input" type="text" placeholder="Search appointments" oninput="renderAppointments()" />
+        </div>
+        <div class="view-toggle">
+          <button class="view-btn active" id="btnGrid" onclick="setView('grid')">⊞</button>
+          <button class="view-btn" id="btnTable" onclick="setView('table')">☰</button>
+        </div>
+        <button class="btn btn-primary" onclick="openCreatePanel()">＋ Create Appointment</button>
+        <button class="btn btn-ghost" onclick="checkHealth()">↻ Refresh Health</button>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card c1"><div class="stat-glow"></div><div class="stat-chip">📋</div><div class="stat-val" id="sCreated">0</div><div class="stat-lbl">All Appointments </div></div>
+      <div class="stat-card c2"><div class="stat-glow"></div><div class="stat-chip">🗂️</div><div class="stat-val" id="sSchedules">0</div><div class="stat-lbl">Covered Appointments</div></div>
+    </div>
+
+    <div class="panel hidden" id="createPanel">
+      <div class="panel-title">Create Appointment</div>
+      <div class="frow">
+        <div class="fg"><label class="flabel">Schedule ID *</label><input id="aScheduleId" class="finput" type="number" min="1" /></div>
+        <div class="fg"><label class="flabel">Patient ID *</label><input id="aPatientId" class="finput" type="number" min="1" /></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flabel">Appointment Date</label><input id="aDate" class="finput" type="date" /></div>
+        <div class="fg"><label class="flabel">Status</label><input id="aStatus" class="finput" type="text" value="BOOKED" /></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flabel">Start Time</label><input id="aStart" class="finput" type="time" value="09:00" /></div>
+        <div class="fg"><label class="flabel">End Time</label><input id="aEnd" class="finput" type="time" value="09:30" /></div>
+      </div>
+      <button class="btn btn-primary" onclick="createAppointment()">Create Appointment</button>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Check Appointment Count By Schedule</div>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <input id="countScheduleId" class="finput" type="number" min="1" placeholder="Schedule ID" style="width:180px" />
+        <button class="btn btn-ghost btn-sm" onclick="checkCount()">Get Count</button>
+        <span id="countText" style="color:var(--text-muted)">No count checked yet</span>
+      </div>
+    </div>
+
+    <div class="panel" style="padding-bottom:6px;">
+      <div class="panel-title">Recently Created Appointments (Current Browser Session)</div>
+      <div id="appArea"></div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<div class="overlay" id="ov-edit-app">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">Update Appointment</span>
+      <button class="close-btn" onclick="closeModal('ov-edit-app')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="frow">
+        <div class="fg"><label class="flabel">Appointment ID</label><input id="uAppointmentId" class="finput" type="number" readonly /></div>
+        <div class="fg"><label class="flabel">Schedule ID *</label><input id="uScheduleId" class="finput" type="number" min="1" /></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flabel">Patient ID *</label><input id="uPatientId" class="finput" type="number" min="1" /></div>
+        <div class="fg"><label class="flabel">Appointment Date</label><input id="uDate" class="finput" type="date" /></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flabel">Start Time</label><input id="uStart" class="finput" type="time" /></div>
+        <div class="fg"><label class="flabel">End Time</label><input id="uEnd" class="finput" type="time" /></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flabel">Status</label><input id="uStatus" class="finput" type="text" value="BOOKED" /></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('ov-edit-app')">Cancel</button>
+      <button class="btn btn-primary" onclick="updateAppointment()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_APPOINTMENT = 'https://appointment-service-hxup.onrender.com';
+  const API_User =  'http://localhost:8084';
+  let createdAppointments = [];
+  let lastCount = 0;
+  let currentView = 'grid';
+
+  function esc(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function toast(msg, ok = true) {
+    const t = document.createElement('div');
+    t.className = 'toast ' + (ok ? 'ok' : 'bad');
+    t.innerHTML = '<span>' + (ok ? '✅' : '❌') + '</span><span>' + msg + '</span>';
+    document.getElementById('toastWrap').prepend(t);
+    setTimeout(() => t.remove(), 3200);
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  function openCreatePanel() {
+    const panel = document.getElementById('createPanel');
+    if (panel) {
+      panel.classList.remove('hidden');
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  function setView(v) {
+    currentView = v;
+    document.getElementById('btnGrid').classList.toggle('active', v === 'grid');
+    document.getElementById('btnTable').classList.toggle('active', v === 'table');
+    renderAppointments();
+  }
+
+  async function checkHealth() {
+    try {
+      const res = await fetch(API_APPOINTMENT + '/v3/api-docs', { signal: AbortSignal.timeout(3000) });
+      const ok = res.ok;
+      document.getElementById('dot').className = 'dot' + (ok ? '' : ' off');
+      document.getElementById('statusTxt').textContent = ok ? 'Appointment Service Online' : 'Appointment Service Error';
+    } catch (e) {
+      document.getElementById('dot').className = 'dot off';
+      document.getElementById('statusTxt').textContent = 'Appointment Service Offline';
+    }
+  }
+
+  async function loadAppointments() {
+    try {
+      const res = await fetch(API_APPOINTMENT + '/appointments');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      createdAppointments = Array.isArray(data) ? data : [];
+      updateStats();
+      renderAppointments();
+    } catch (e) {
+      toast('Failed to load appointments: ' + e.message, false);
+    }
+  }
+
+  async function createAppointment() {
+    const scheduleId = Number(document.getElementById('aScheduleId').value);
+    const patientId = Number(document.getElementById('aPatientId').value);
+    const appointmentDate = document.getElementById('aDate').value || null;
+    const startTime = document.getElementById('aStart').value || null;
+    const endTime = document.getElementById('aEnd').value || null;
+    const status = document.getElementById('aStatus').value.trim() || null;
+
+    if (!scheduleId || !patientId) {
+      toast('Schedule ID and Patient ID are required', false);
+      return;
+    }
+
+    const payload = { scheduleId, patientId, appointmentDate, startTime, endTime, status };
+
+    try {
+      const res = await fetch(API_APPOINTMENT + '/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const message = await res.text();
+        throw new Error(message || ('HTTP ' + res.status));
+      }
+
+      const data = await res.json();
+      createdAppointments.unshift({ ...payload, ...data });
+      updateStats();
+      renderAppointments();
+      toast('Appointment created successfully');
+    } catch (e) {
+      toast('Create failed: ' + e.message, false);
+    }
+  }
+
+  async function checkCount() {
+    const scheduleId = document.getElementById('countScheduleId').value;
+    if (!scheduleId) {
+      toast('Enter a schedule ID to check count', false);
+      return;
+    }
+    try {
+      const res = await fetch(API_APPOINTMENT + '/appointments/count/' + scheduleId);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const count = await res.json();
+      lastCount = Number(count) || 0;
+      document.getElementById('countText').textContent = 'Schedule ' + scheduleId + ' has ' + lastCount + ' appointment(s)';
+      updateStats();
+      toast('Count loaded for schedule ' + scheduleId);
+    } catch (e) {
+      toast('Count check failed: ' + e.message, false);
+    }
+  }
+
+  function upsertAppointment(item) {
+    const idx = createdAppointments.findIndex(a => a.appointmentId === item.appointmentId);
+    if (idx >= 0) {
+      createdAppointments[idx] = item;
+      return;
+    }
+    createdAppointments.unshift(item);
+  }
+
+  function openEditAppointment(appointmentId) {
+    const current = createdAppointments.find(a => a.appointmentId === appointmentId);
+    if (!current) {
+      toast('Appointment not found in current list', false);
+      return;
+    }
+    document.getElementById('uAppointmentId').value = current.appointmentId;
+    document.getElementById('uScheduleId').value = current.scheduleId ?? '';
+    document.getElementById('uPatientId').value = current.patientId ?? '';
+    document.getElementById('uDate').value = current.appointmentDate || '';
+    document.getElementById('uStart').value = current.startTime || '';
+    document.getElementById('uEnd').value = current.endTime || '';
+    document.getElementById('uStatus').value = current.status || '';
+    openModal('ov-edit-app');
+  }
+
+  async function updateAppointment() {
+    const appointmentId = Number(document.getElementById('uAppointmentId').value);
+    const scheduleId = Number(document.getElementById('uScheduleId').value);
+    const patientId = Number(document.getElementById('uPatientId').value);
+    const appointmentDate = document.getElementById('uDate').value || null;
+    const startTime = document.getElementById('uStart').value || null;
+    const endTime = document.getElementById('uEnd').value || null;
+    const status = document.getElementById('uStatus').value.trim() || null;
+
+    if (!appointmentId || !scheduleId || !patientId) {
+      toast('Appointment ID, Schedule ID, and Patient ID are required', false);
+      return;
+    }
+
+    const payload = { appointmentDate, startTime, endTime };
+
+    try {
+      const res = await fetch(API_APPOINTMENT + '/appointments/' + appointmentId + '/datetime', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const message = await res.text();
+        throw new Error(message || ('HTTP ' + res.status));
+      }
+
+      const data = await res.json();
+      upsertAppointment({ ...data, appointmentId, scheduleId, patientId, status });
+      closeModal('ov-edit-app');
+      updateStats();
+      renderAppointments();
+      toast('Appointment updated successfully');
+    } catch (e) {
+      toast('Update failed: ' + e.message, false);
+    }
+  }
+
+  async function deleteAppointment(appointmentId) {
+    if (!appointmentId) {
+      toast('Appointment ID is missing', false);
+      return;
+    }
+    if (!confirm('Delete appointment #' + appointmentId + '?')) return;
+
+    try {
+      const res = await fetch(API_APPOINTMENT + '/appointments/' + appointmentId, {
+        method: 'DELETE'
+      });
+
+      if (!res.ok) {
+        const message = await res.text();
+        throw new Error(message || ('HTTP ' + res.status));
+      }
+
+      createdAppointments = createdAppointments.filter(a => a.appointmentId !== appointmentId);
+      updateStats();
+      renderAppointments();
+      toast('Appointment deleted successfully');
+    } catch (e) {
+      toast('Delete failed: ' + e.message, false);
+    }
+  }
+
+  function updateStats() {
+    const scheduleSet = new Set(createdAppointments.map(a => a.scheduleId));
+    document.getElementById('sCreated').textContent = createdAppointments.length;
+    document.getElementById('sSchedules').textContent = scheduleSet.size;
+  }
+
+  function renderAppointments() {
+    const q = document.getElementById('globalSearch')
+      ? document.getElementById('globalSearch').value.trim().toLowerCase()
+      : '';
+
+    const filteredAppointments = createdAppointments.filter(a => {
+      if (!q) return true;
+      const text = [
+        a.appointmentId,
+        a.scheduleId,
+        a.patientId,
+        a.appointmentDate,
+        a.startTime,
+        a.endTime,
+        a.status
+      ].join(' ').toLowerCase();
+      return text.includes(q);
+    });
+
+    if (!filteredAppointments.length) {
+      const msg = createdAppointments.length
+        ? 'No appointments match your search.'
+        : 'No appointments created from this page yet.';
+      document.getElementById('appArea').innerHTML = '<div class="empty-box">' + msg + '</div>';
+      return;
+    }
+
+    if (currentView === 'table') {
+      document.getElementById('appArea').innerHTML =
+        '<div class="table-wrap"><table><thead><tr><th>Appointment</th><th>Schedule</th><th>Patient</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead><tbody>' +
+        filteredAppointments.map(a =>
+          '<tr>' +
+            '<td>' + (a.appointmentId ? ('#' + esc(a.appointmentId)) : '-') + '</td>' +
+            '<td>' + esc(a.scheduleId) + '</td>' +
+            '<td>' + esc(a.patientId) + '</td>' +
+            '<td>' + esc(a.appointmentDate || '-') + '</td>' +
+            '<td>' + esc(a.startTime || '-') + ' - ' + esc(a.endTime || '-') + '</td>' +
+            '<td>' + esc(a.status || '-') + '</td>' +
+            '<td>' + (a.appointmentId
+              ? '<button class="btn btn-ghost btn-sm" onclick="openEditAppointment(' + a.appointmentId + ')">Update</button> <button class="btn btn-danger btn-sm" onclick="deleteAppointment(' + a.appointmentId + ')">Delete</button>'
+              : '<button class="btn btn-ghost btn-sm" disabled>No ID</button>') + '</td>' +
+          '</tr>'
+        ).join('') +
+        '</tbody></table></div>';
+      return;
+    }
+
+    document.getElementById('appArea').innerHTML =
+      '<div class="cards-grid">' +
+      filteredAppointments.map(a =>
+        '<div class="hcard">' +
+          '<div class="hcard-name">Appointment ' + (a.appointmentId ? '#' + esc(a.appointmentId) : '') + '</div>' +
+          '<div class="hcard-id">Schedule ' + esc(a.scheduleId) + ' • Patient ' + esc(a.patientId) + '</div>' +
+          '<div class="info-line">📅 Date: ' + esc(a.appointmentDate || '-') + '</div>' +
+          '<div class="info-line">🕒 Time: ' + esc(a.startTime || '-') + ' - ' + esc(a.endTime || '-') + '</div>' +
+          '<div class="info-line">📌 Status: ' + esc(a.status || '-') + '</div>' +
+          '<div class="hcard-footer">' +
+            (a.appointmentId
+              ? '<button class="btn btn-ghost btn-sm" onclick="openEditAppointment(' + a.appointmentId + ')">Update</button><button class="btn btn-danger btn-sm" onclick="deleteAppointment(' + a.appointmentId + ')">Delete</button>'
+              : '<button class="btn btn-ghost btn-sm" disabled>No ID</button>') +
+          '</div>' +
+        '</div>'
+      ).join('') +
+      '</div>';
+  }
+
+  checkHealth();
+  loadAppointments();
+</script>
+</body>
+</html>
