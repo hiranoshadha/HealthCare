@@ -79,9 +79,10 @@ class UserControllerTest {
 
     @Test
     void createPatient_returns201() {
+        patientDTO.setPassword("password123");
         when(userService.createPatient(any(PatientDTO.class), eq("password123"))).thenReturn(patientDTO);
 
-        ResponseEntity<PatientDTO> response = userController.createPatient(patientDTO, "password123");
+        ResponseEntity<PatientDTO> response = userController.createPatient(patientDTO);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody()).isEqualTo(patientDTO);
@@ -160,9 +161,10 @@ class UserControllerTest {
 
     @Test
     void createDoctor_returns201() {
+        doctorDTO.setPassword("password123");
         when(userService.createDoctor(any(DoctorDTO.class), eq("password123"))).thenReturn(doctorDTO);
 
-        ResponseEntity<DoctorDTO> response = userController.createDoctor(doctorDTO, "password123");
+        ResponseEntity<DoctorDTO> response = userController.createDoctor(doctorDTO);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody()).isEqualTo(doctorDTO);
