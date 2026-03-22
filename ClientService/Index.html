@@ -439,13 +439,15 @@
           signal: AbortSignal.timeout(5000)
         });
 
-        if (response.ok || response.status < 500) {
+        const data = await response.json();
+
+        if (data.status === 'UP') {
           dotEl.classList.remove('offline');
           statusEl.textContent = '✓ ONLINE';
           healthLink.style.opacity = '1';
           docsLink.style.opacity = '1';
         } else {
-          throw new Error(`HTTP ${response.status}`);
+          throw new Error(`Status: ${data.status}`);
         }
       } catch (error) {
         dotEl.classList.add('offline');
