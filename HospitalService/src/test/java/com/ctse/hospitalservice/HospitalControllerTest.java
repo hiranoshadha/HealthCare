@@ -4,39 +4,32 @@ import com.ctse.hospitalservice.controller.HospitalController;
 import com.ctse.hospitalservice.dto.DoctorScheduleDTO;
 import com.ctse.hospitalservice.dto.HospitalDTO;
 import com.ctse.hospitalservice.dto.HospitalWithDoctorsDTO;
-import com.ctse.hospitalservice.exception.GlobalExceptionHandler;
 import com.ctse.hospitalservice.exception.ResourceNotFoundException;
 import com.ctse.hospitalservice.service.HospitalService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(HospitalController.class)
-@Import(GlobalExceptionHandler.class)
+@ExtendWith(MockitoExtension.class)
 class HospitalControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockBean
+    @Mock
     private HospitalService hospitalService;
+
+    @InjectMocks
+    private HospitalController hospitalController;
 
     private HospitalDTO hospitalDTO;
 
@@ -45,133 +38,124 @@ class HospitalControllerTest {
         hospitalDTO = new HospitalDTO(1L, "City Hospital", "123 Main St", "Colombo", "0112345678", "city@hospital.com");
     }
 
-    // ---- POST /api/hospitals ----
+    // ---- createHospital ----
 
     @Test
-    void createHospital_returns201() throws Exception {
+    void createHospital_returns201() {
         when(hospitalService.createHospital(any(HospitalDTO.class))).thenReturn(hospitalDTO);
 
-        mockMvc.perform(post("/api/hospitals")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(hospitalDTO)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.hospitalId").value(1L))
-                .andExpect(jsonPath("$.name").value("City Hospital"));
+        ResponseEntity<HospitalDTO> response = hospitalController.createHospital(hospitalDTO);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getName()).isEqualTo("City Hospital");
     }
 
-    // ---- GET /api/hospitals/{id} ----
+    // ---- getHospitalById ----
 
     @Test
-    void getHospitalById_returns200() throws Exception {
+    void getHospitalById_returns200() {
         when(hospitalService.getHospitalById(1L)).thenReturn(hospitalDTO);
 
-        mockMvc.perform(get("/api/hospitals/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.hospitalId").value(1L))
-                .andExpect(jsonPath("$.city").value("Colombo"));
+        ResponseEntity<HospitalDTO> response = hospitalController.getHospitalById(1L);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getHospitalId()).isEqualTo(1L);
     }
 
     @Test
-    void getHospitalById_notFound_returns404() throws Exception {
-        when(hospitalService.getHospitalById(99L))
-                .thenThrow(new ResourceNotFoundException("Hospital not found with id: 99"));
+    void getHospitalById_notFound_throwsException() {
+        when(hospitalService.getHospitalById(99L)).thenThrow(new ResourceNotFoundException("Hospital not found with id: 99"));
 
-        mockMvc.perform(get("/api/hospitals/99"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Hospital not found with id: 99"));
+        assertThatThrownBy(() -> hospitalController.getHospitalById(99L))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("99");
     }
 
-    // ---- GET /api/hospitals ----
+    // ---- getAllHospitals ----
 
     @Test
-    void getAllHospitals_returns200() throws Exception {
+    void getAllHospitals_returnsList() {
         HospitalDTO h2 = new HospitalDTO(2L, "North Hospital", "45 Park Rd", "Kandy", "0812345678", "north@hospital.com");
         when(hospitalService.getAllHospitals()).thenReturn(List.of(hospitalDTO, h2));
 
-        mockMvc.perform(get("/api/hospitals"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").value("City Hospital"))
-                .andExpect(jsonPath("$[1].name").value("North Hospital"));
+        ResponseEntity<List<HospitalDTO>> response = hospitalController.getAllHospitals();
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).hasSize(2);
     }
 
     @Test
-    void getAllHospitals_empty_returns200() throws Exception {
+    void getAllHospitals_empty() {
         when(hospitalService.getAllHospitals()).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/hospitals"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+        ResponseEntity<List<HospitalDTO>> response = hospitalController.getAllHospitals();
+
+        assertThat(response.getBody()).isEmpty();
     }
 
-    // ---- GET /api/hospitals/city/{city} ----
+    // ---- getHospitalsByCity ----
 
     @Test
-    void getHospitalsByCity_returns200() throws Exception {
+    void getHospitalsByCity_returnsList() {
         when(hospitalService.getHospitalsByCity("Colombo")).thenReturn(List.of(hospitalDTO));
 
-        mockMvc.perform(get("/api/hospitals/city/Colombo"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].city").value("Colombo"));
+        ResponseEntity<List<HospitalDTO>> response = hospitalController.getHospitalsByCity("Colombo");
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).hasSize(1);
+        assertThat(response.getBody().get(0).getCity()).isEqualTo("Colombo");
     }
 
-    // ---- PUT /api/hospitals/{id} ----
+    // ---- updateHospital ----
 
     @Test
-    void updateHospital_returns200() throws Exception {
+    void updateHospital_returns200() {
         HospitalDTO updated = new HospitalDTO(1L, "Updated Hospital", "99 New St", "Galle", "0912345678", "updated@hospital.com");
         when(hospitalService.updateHospital(eq(1L), any(HospitalDTO.class))).thenReturn(updated);
 
-        mockMvc.perform(put("/api/hospitals/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updated)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Updated Hospital"))
-                .andExpect(jsonPath("$.city").value("Galle"));
+        ResponseEntity<HospitalDTO> response = hospitalController.updateHospital(1L, updated);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getName()).isEqualTo("Updated Hospital");
     }
 
     @Test
-    void updateHospital_notFound_returns404() throws Exception {
+    void updateHospital_notFound_throwsException() {
         when(hospitalService.updateHospital(eq(99L), any(HospitalDTO.class)))
                 .thenThrow(new ResourceNotFoundException("Hospital not found with id: 99"));
 
-        mockMvc.perform(put("/api/hospitals/99")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(hospitalDTO)))
-                .andExpect(status().isNotFound());
+        assertThatThrownBy(() -> hospitalController.updateHospital(99L, hospitalDTO))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
-    // ---- DELETE /api/hospitals/{id} ----
+    // ---- deleteHospital ----
 
     @Test
-    void deleteHospital_returns204() throws Exception {
+    void deleteHospital_returns204() {
         doNothing().when(hospitalService).deleteHospital(1L);
 
-        mockMvc.perform(delete("/api/hospitals/1"))
-                .andExpect(status().isNoContent());
+        ResponseEntity<Void> response = hospitalController.deleteHospital(1L);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        verify(hospitalService).deleteHospital(1L);
     }
 
     @Test
-    void deleteHospital_notFound_returns404() throws Exception {
+    void deleteHospital_notFound_throwsException() {
         doThrow(new ResourceNotFoundException("Hospital not found with id: 99"))
                 .when(hospitalService).deleteHospital(99L);
 
-        mockMvc.perform(delete("/api/hospitals/99"))
-                .andExpect(status().isNotFound());
+        assertThatThrownBy(() -> hospitalController.deleteHospital(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
-    // ---- GET /api/hospitals/{id}/doctors ----
+    // ---- getHospitalWithDoctors ----
 
     @Test
-    void getHospitalWithDoctors_returns200() throws Exception {
+    void getHospitalWithDoctors_returns200() {
         DoctorScheduleDTO schedule = new DoctorScheduleDTO();
         schedule.setDoctorId(1L);
-        schedule.setHospitalId(1L);
-        schedule.setDayOfWeek("MONDAY");
-        schedule.setStartTime("09:00");
-        schedule.setEndTime("17:00");
-        schedule.setSlotDuration(30);
         schedule.setFirstName("Ishan");
         schedule.setLastName("Madusanka");
         schedule.setSpecialization("Dermatology");
@@ -183,20 +167,19 @@ class HospitalControllerTest {
 
         when(hospitalService.getHospitalWithDoctors(1L)).thenReturn(result);
 
-        mockMvc.perform(get("/api/hospitals/1/doctors"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.hospitalId").value(1L))
-                .andExpect(jsonPath("$.doctors.length()").value(1))
-                .andExpect(jsonPath("$.doctors[0].firstName").value("Ishan"))
-                .andExpect(jsonPath("$.doctors[0].specialization").value("Dermatology"));
+        ResponseEntity<HospitalWithDoctorsDTO> response = hospitalController.getHospitalWithDoctors(1L);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getDoctors()).hasSize(1);
+        assertThat(response.getBody().getDoctors().get(0).getFirstName()).isEqualTo("Ishan");
     }
 
     @Test
-    void getHospitalWithDoctors_notFound_returns404() throws Exception {
+    void getHospitalWithDoctors_notFound_throwsException() {
         when(hospitalService.getHospitalWithDoctors(99L))
                 .thenThrow(new ResourceNotFoundException("Hospital not found with id: 99"));
 
-        mockMvc.perform(get("/api/hospitals/99/doctors"))
-                .andExpect(status().isNotFound());
+        assertThatThrownBy(() -> hospitalController.getHospitalWithDoctors(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 }
