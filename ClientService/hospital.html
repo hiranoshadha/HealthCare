@@ -381,10 +381,6 @@
       </a>
     </div>
     <div class="sidebar-bottom">
-      <div class="api-badge">
-        <div class="dot" id="dot"></div>
-        <span id="statusTxt">Checking...</span>
-      </div>
       <button class="btn btn-danger" onclick="logout()" style="width: 100%; margin-top: 12px;">
         <span>🚪</span>
         <span>Logout</span>
@@ -546,7 +542,7 @@
 
 <script>
   const API_HOSPITAL = 'https://hospitalservice-633n.onrender.com';
-  const API_USER     = 'http://localhost:8081';
+  const API_USER     = 'https://healthcare-7pwe.onrender.com';
 
   let allHospitals = [];
   let editingId = null;
@@ -608,18 +604,7 @@
     }
   }
 
-  // ── HEALTH ──────────────────────────────────────────────
-  async function checkHealth() {
-    try {
-      const r = await fetch(API_HOSPITAL + '/api/hospitals', { signal: AbortSignal.timeout(3000) });
-      const ok = r.ok || r.status < 500;
-      document.getElementById('dot').className = 'dot' + (ok ? '' : ' off');
-      document.getElementById('statusTxt').textContent = ok ? 'Services Online' : 'Service Error';
-    } catch {
-      document.getElementById('dot').className = 'dot off';
-      document.getElementById('statusTxt').textContent = 'Services Offline';
-    }
-  }
+
 
   // ── LOAD ────────────────────────────────────────────────
   async function loadHospitals() {
@@ -861,7 +846,6 @@
   }
 
   // ── INIT ─────────────────────────────────────────────────
-  checkHealth();
   updateNavigation();
   loadHospitals();
 </script>

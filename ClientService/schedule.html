@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Appointment Management — MediConnect</title>
+  <title>Schedule Management — MediConnect</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
@@ -59,15 +59,11 @@
     tbody tr:hover { background: rgba(14,165,233,.08); }
     .btn-danger { background: linear-gradient(135deg, rgba(239,68,68,.9), rgba(239,68,68,.7)); }
     .btn-secondary { background: rgba(100,116,139,.2); color: var(--text); }
-    .schedule-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(270px,1fr)); gap: 16px; margin: 12px 0; }
-    .schedule-card { border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; cursor: pointer; background: var(--bg); transition: all .2s; }
-    .schedule-card:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0,0,0,.3); border-color: rgba(14,165,233,.35); }
-    .schedule-summary { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
-    .schedule-title { font-weight: 700; margin-bottom: 8px; }
     .msg { margin-bottom: 14px; padding: 9px 12px; border-radius: 10px; font-size: 13px; }
     .msg.success { background: rgba(16,185,129,.13); border: 1px solid rgba(16,185,129,.35); color: var(--success); }
     .msg.error { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.2); color: var(--danger); }
-    @media (max-width: 960px) { .form-row { grid-template-columns: 1fr; } .schedule-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 960px) { .form-row { grid-template-columns: 1fr; } }
+    @media (max-width: 780px) { .main { padding: 24px 18px 40px; } }
   </style>
 </head>
 <body>
@@ -75,51 +71,66 @@
   <aside class="sidebar">
     <div class="logo">
       <div class="logo-icon">🩺</div>
-      <div><div class="logo-name">MediConnect</div><div class="logo-sub">Appointment Hub</div></div>
+      <div><div class="logo-name">MediConnect</div><div class="logo-sub">Doctor Hub</div></div>
     </div>
     <nav class="nav">
       <a id="navHospital" class="nav-item" href="hospital.html"><span class="nav-icon">🏥</span>Hospitals</a>
       <a id="navDoctor" class="nav-item" href="doctor-registration.html"><span class="nav-icon">👩‍⚕️</span>Doctors</a>
-      <a id="navSchedule" class="nav-item" href="schedule.html"><span class="nav-icon">📅</span>Schedules</a>
-      <a id="navAppointment" class="nav-item active" href="appointment.html"><span class="nav-icon">🗓️</span>Appointments</a>
+      <a id="navSchedule" class="nav-item active" href="schedule.html"><span class="nav-icon">📅</span>Schedules</a>
+      <a id="navAppointment" class="nav-item" href="appointment.html"><span class="nav-icon">🗓️</span>Appointments</a>
       <a id="navUser" class="nav-item" href="user-profile.html"><span class="nav-icon">👤</span>Profile</a>
     </nav>
   </aside>
 
   <main class="main">
     <div class="topbar">
-      <div><h1 class="page-title">Appointment Manager</h1><div class="page-sub">Browse schedules and book appointments.</div></div>
+      <div><h1 class="page-title">Schedule Manager</h1><div class="page-sub">Create and manage your schedules.</div></div>
       <div class="flex"><button class="form-button btn-secondary" onclick="loadSchedules()">Refresh</button><button class="form-button" onclick="logout()">Logout</button></div>
     </div>
 
     <div id="messageContainer"></div>
 
     <div class="card">
-      <h2 style="margin-bottom:12px;">Search Available Schedules</h2>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label" for="filterHospital">Hospital</label><select id="filterHospital" class="form-select"><option value="">All</option></select></div>
-        <div class="form-group"><label class="form-label" for="filterDoctor">Doctor</label><select id="filterDoctor" class="form-select"><option value="">All</option></select></div>
-        <div class="form-group" style="align-self:flex-end"><button class="form-button" type="button" onclick="applyScheduleFilters()">Apply</button></div>
+      <h2 style="margin-bottom:12px;">Add New Schedule (Doctor: <span id="currentDoctorId">-</span>)</h2>
+      <div class="grid">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Doctor ID</label><input id="doctorId" class="form-input" type="number" readonly></div>
+          <div class="form-group"><label class="form-label" for="hospitalId">Hospital</label><select id="hospitalId" class="form-select"></select></div>
+          <div class="form-group"><label class="form-label" for="dayOfWeek">Day of Week</label><select id="dayOfWeek" class="form-select"><option value="MONDAY">Monday</option><option value="TUESDAY">Tuesday</option><option value="WEDNESDAY">Wednesday</option><option value="THURSDAY">Thursday</option><option value="FRIDAY">Friday</option><option value="SATURDAY">Saturday</option><option value="SUNDAY">Sunday</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label" for="startTime">Start Time</label><input id="startTime" class="form-input" type="time"></div>
+          <div class="form-group"><label class="form-label" for="endTime">End Time</label><input id="endTime" class="form-input" type="time"></div>
+          <div class="form-group"><label class="form-label" for="slotDuration">Slot Duration (minutes)</label><input id="slotDuration" class="form-input" type="number" min="5" value="30"></div>
+        </div>
+        <div><button class="form-button" type="button" onclick="createSchedule()">Create Schedule</button></div>
       </div>
-      <div id="scheduleCards" class="schedule-grid"></div>
     </div>
 
     <div class="card" style="margin-top:20px;">
-      <h2 style="margin-bottom:12px;">My Appointments (Patient ID: <span id="patientIdLbl">-</span>)</h2>
-      <div class="table-wrap"><table id="appointmentTable"><thead><tr>
-        <th>ID</th><th>Schedule</th><th>Doctor</th><th>Hospital</th><th>Date</th><th>Start</th><th>End</th><th>Status</th><th>Action</th>
+      <h2 style="margin-bottom:12px;">Search Schedules</h2>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label" for="filterHospital">Hospital</label><select id="filterHospital" class="form-select"><option value="">All</option></select></div>
+        <div class="form-group"><label class="form-label" for="filterDoctor">Doctor</label><select id="filterDoctor" class="form-select"><option value="">All</option></select></div>
+        <div class="form-group" style="align-self:flex-end"><button class="form-button" type="button" onclick="applyFilters()">Apply Filter</button></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <h2 style="margin-bottom:12px;">Existing Schedules</h2>
+      <div class="table-wrap"><table id="scheduleTable"><thead><tr>
+        <th>ID</th><th>Doctor</th><th>Hospital</th><th>Day</th><th>Start</th><th>End</th><th>Slot</th><th>Actions</th>
       </tr></thead><tbody></tbody></table></div>
     </div>
   </main>
 </div>
 
 <script>
-  const API_APPOINTMENT = 'https://appointment-service-hxup.onrender.com';
   const API_DOCTOR = 'https://doctor-service-3h4t.onrender.com';
   const API_HOSPITAL = 'https://hospitalservice-633n.onrender.com';
 
   let auth = null;
-  let allSchedules = [];
+  let currentSchedules = [];
 
   function showMessage(message, type = 'success') {
     const container = document.getElementById('messageContainer');
@@ -131,8 +142,16 @@
     const token = localStorage.getItem('token');
     const user = localStorage.getItem('user');
     const role = localStorage.getItem('role');
-    if (!token || !user || !role) { window.location.href = 'login.html'; return null; }
-    try { return { token, user: JSON.parse(user), role }; } catch { window.location.href = 'login.html'; return null; }
+    if (!token || !user || !role) {
+      window.location.href = 'login.html';
+      return null;
+    }
+    try {
+      return { token, user: JSON.parse(user), role };
+    } catch {
+      window.location.href = 'login.html';
+      return null;
+    }
   }
 
   function updateNavigation() {
@@ -142,13 +161,26 @@
     const navUser = document.getElementById('navUser');
     const navSchedule = document.getElementById('navSchedule');
     const navAppointment = document.getElementById('navAppointment');
+
     navDoctor.style.display = 'none'; navHospital.style.display = 'none'; navUser.style.display = 'none'; navSchedule.style.display = 'none'; navAppointment.style.display = 'none';
-    if (role === 'ADMIN') { navDoctor.style.display = 'flex'; navHospital.style.display = 'flex'; navUser.style.display = 'flex'; }
-    else if (role === 'DOCTOR') { navSchedule.style.display = 'flex'; navUser.style.display = 'flex'; }
-    else if (role === 'PATIENT') { navAppointment.style.display = 'flex'; navUser.style.display = 'flex'; }
+
+    if (role === 'ADMIN') {
+      navDoctor.style.display = 'flex';
+      navHospital.style.display = 'flex';
+      navUser.style.display = 'flex';
+    } else if (role === 'DOCTOR') {
+      navSchedule.style.display = 'flex';
+      navUser.style.display = 'flex';
+    } else if (role === 'PATIENT') {
+      navAppointment.style.display = 'flex';
+      navUser.style.display = 'flex';
+    }
   }
 
-  function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+  function logout() {
+    localStorage.clear();
+    window.location.href = 'login.html';
+  }
 
 
 
@@ -157,126 +189,141 @@
       const res = await fetch(`${API_HOSPITAL}/api/hospitals`);
       if (!res.ok) throw new Error('Unable to load hospitals');
       const hospitals = await res.json();
+      const hospitalSelect = document.getElementById('hospitalId');
       const filterHospital = document.getElementById('filterHospital');
+      hospitalSelect.innerHTML = '<option value="">Select hospital</option>';
       filterHospital.innerHTML = '<option value="">All</option>';
-      hospitals.forEach(h => filterHospital.insertAdjacentHTML('beforeend', `<option value="${h.hospitalId}">${h.name || `Hospital ${h.hospitalId}`}</option>`));
-    } catch (e) { showMessage(e.message, 'error'); }
-  }
-
-  async function loadSchedules() {
-    try {
-      const res = await fetch(`${API_DOCTOR}/api/schedules`);
-      if (!res.ok) throw new Error('Unable to fetch schedules');
-      allSchedules = await res.json();
-      renderScheduleOptions(allSchedules);
-      renderScheduleCards(allSchedules);
-      showMessage(`${allSchedules.length} schedules loaded.`, 'success');
-    } catch (e) {
-      showMessage(e.message, 'error');
-    }
-  }
-
-  function renderScheduleOptions(schedules) {
-    const doctorSelect = document.getElementById('filterDoctor');
-    const doctorIds = [...new Set(schedules.map(s => s.doctorId))];
-    doctorSelect.innerHTML = '<option value="">All</option>';
-    doctorIds.forEach(id => doctorSelect.insertAdjacentHTML('beforeend', `<option value="${id}">${id}</option>`));
-  }
-
-  function renderScheduleCards(schedules) {
-    const cardsContainer = document.getElementById('scheduleCards');
-    cardsContainer.innerHTML = '';
-    if (!schedules.length) { cardsContainer.innerHTML = '<p>No schedules found</p>'; return; }
-    schedules.forEach(s => {
-      const card = document.createElement('div');
-      card.className = 'schedule-card';
-      const booked = `Booked: ...`;
-      card.innerHTML = `
-        <div class="schedule-title">Schedule #${s.scheduleId}</div>
-        <div class="schedule-summary">Doctor: ${s.doctorId} | Hospital: ${s.hospitalId}</div>
-        <div class="schedule-summary">${s.dayOfWeek} ${s.startTime}-${s.endTime}</div>
-        <div class="schedule-summary">Slot: ${s.slotDuration} min</div>
-        <button class="form-button" style="margin-top:8px;" onclick="bookSchedule(${s.scheduleId})">Book this slot</button>
-      `;
-      cardsContainer.appendChild(card);
-    });
-  }
-
-  async function applyScheduleFilters() {
-    const hospitalId = document.getElementById('filterHospital').value;
-    const doctorId = document.getElementById('filterDoctor').value;
-    let filtered = [...allSchedules];
-    if (hospitalId) filtered = filtered.filter(s => String(s.hospitalId) === String(hospitalId));
-    if (doctorId) filtered = filtered.filter(s => String(s.doctorId) === String(doctorId));
-    renderScheduleCards(filtered);
-  }
-
-  async function bookSchedule(scheduleId) {
-    if (auth.role !== 'PATIENT') {
-      showMessage('Only patients can book appointments.', 'error');
-      return;
-    }
-    const patientId = auth.user.patientId;
-    if (!patientId) {
-      showMessage('Cannot identify patient ID from user profile.', 'error');
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API_APPOINTMENT}/api/appointments?scheduleId=${scheduleId}&patientId=${patientId}`, { method: 'POST' });
-      if (!res.ok) {
-        const m = await res.text();
-        throw new Error(m || 'Failed to book appointment');
-      }
-      const data = await res.json();
-      showMessage(`Booked appointment ${data.appointmentId}`, 'success');
-      loadAppointments();
-    } catch (e) {
-      showMessage(e.message, 'error');
-    }
-  }
-
-  async function loadAppointments() {
-    try {
-      const patientId = auth.user.patientId;
-      if (!patientId) {
-        showMessage('No patient ID available for appointment lookup', 'error');
-        return;
-      }
-      document.getElementById('patientIdLbl').textContent = patientId;
-      const res = await fetch(`${API_APPOINTMENT}/api/appointments/patient/${patientId}`);
-      if (!res.ok) throw new Error('Failed to fetch appointments');
-      const appointments = await res.json();
-      const tbody = document.querySelector('#appointmentTable tbody');
-      tbody.innerHTML = '';
-      appointments.forEach(appt => {
-        tbody.insertAdjacentHTML('beforeend', `
-          <tr>
-            <td>${appt.appointmentId}</td>
-            <td>${appt.scheduleId}</td>
-            <td>${appt.patientId}</td>
-            <td>${appt.appointmentDate || '-'}</td>
-            <td>${appt.startTime || '-'}</td>
-            <td>${appt.endTime || '-'}</td>
-            <td>${appt.status || '-'}</td>
-            <td><button class="form-button btn-danger" onclick="cancelAppointment(${appt.appointmentId})">Cancel</button></td>
-          </tr>
-        `);
+      hospitals.forEach(h => {
+        hospitalSelect.insertAdjacentHTML('beforeend', `<option value="${h.hospitalId}">${h.name || 'Hospital ' + h.hospitalId}</option>`);
+        filterHospital.insertAdjacentHTML('beforeend', `<option value="${h.hospitalId}">${h.name || 'Hospital ' + h.hospitalId}</option>`);
       });
     } catch (e) {
       showMessage(e.message, 'error');
     }
   }
 
-  async function cancelAppointment(appointmentId) {
-    if (!confirm('Cancel appointment ' + appointmentId + '?')) return;
+  async function loadSchedules() {
     try {
-      const res = await fetch(`${API_APPOINTMENT}/api/appointments/${appointmentId}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Cancel failed');
-      showMessage('Appointment canceled.', 'success');
-      loadAppointments();
+      let res = await fetch(`${API_DOCTOR}/api/schedules`);
+      if (!res.ok) throw new Error('Unable to fetch schedules');
+      const schedules = await res.json();
+      currentSchedules = schedules;
+      renderSchedules(schedules);
+      collectDoctorOptions(schedules);
+      showMessage(`Loaded ${schedules.length} schedules`, 'success');
     } catch (e) {
       showMessage(e.message, 'error');
+    }
+  }
+
+  function collectDoctorOptions(schedules) {
+    const doctorSelect = document.getElementById('filterDoctor');
+    const existing = new Set();
+    doctorSelect.innerHTML = '<option value="">All</option>';
+    schedules.forEach(s => {
+      if (!existing.has(s.doctorId)) {
+        existing.add(s.doctorId);
+        doctorSelect.insertAdjacentHTML('beforeend', `<option value="${s.doctorId}">${s.doctorId}</option>`);
+      }
+    });
+  }
+
+  async function applyFilters() {
+    try {
+      const hospitalId = document.getElementById('filterHospital').value;
+      const doctorId = document.getElementById('filterDoctor').value;
+
+      if (doctorId) {
+        const res = await fetch(`${API_DOCTOR}/api/schedules/doctor/${doctorId}`);
+        if (!res.ok) throw new Error('Filter by doctor failed');
+        currentSchedules = await res.json();
+      } else if (hospitalId) {
+        const res = await fetch(`${API_DOCTOR}/api/schedules/hospital/${hospitalId}`);
+        if (!res.ok) throw new Error('Filter by hospital failed');
+        currentSchedules = await res.json();
+      } else {
+        return loadSchedules();
+      }
+      renderSchedules(currentSchedules);
+    } catch (e) {
+      showMessage(e.message, 'error');
+    }
+  }
+
+  async function renderSchedules(schedules) {
+    const tbody = document.querySelector('#scheduleTable tbody');
+    tbody.innerHTML = '';
+    const doctorId = auth.user.doctorId;
+    schedules.forEach(s => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${s.scheduleId}</td>
+        <td>${s.doctorId}</td>
+        <td>${s.hospitalId}</td>
+        <td>${s.dayOfWeek}</td>
+        <td>${s.startTime}</td>
+        <td>${s.endTime}</td>
+        <td>${s.slotDuration}</td>
+        <td><button class="form-button btn-danger" ${s.doctorId !== doctorId ? 'disabled' : ''} onclick="deleteSchedule(${s.scheduleId})">Delete</button></td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
+
+  async function createSchedule() {
+    const hospitalId = Number(document.getElementById('hospitalId').value);
+    const dayOfWeek = document.getElementById('dayOfWeek').value;
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+    const slotDuration = Number(document.getElementById('slotDuration').value);
+
+    if (!hospitalId || !dayOfWeek || !startTime || !endTime || !slotDuration) {
+      showMessage('Please fill all schedule fields', 'error');
+      return;
+    }
+
+    const doctorId = auth.user.doctorId;
+    if (!doctorId) {
+      showMessage('Only doctors can create schedules', 'error');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_DOCTOR}/api/schedules`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ doctorId, hospitalId, dayOfWeek, startTime, endTime, slotDuration })
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || 'Failed to create schedule');
+      }
+
+      const saved = await res.json();
+      showMessage(`Schedule ${saved.scheduleId} created`, 'success');
+      loadSchedules();
+    } catch (e) {
+      showMessage(e.message || e, 'error');
+    }
+  }
+
+  async function deleteSchedule(scheduleId) {
+    try {
+      const selected = currentSchedules.find(s => s.scheduleId === scheduleId);
+      if (!selected || selected.doctorId !== auth.user.doctorId) {
+        showMessage('You can only delete your own schedules.', 'error');
+        return;
+      }
+
+      if (!confirm('Delete schedule ' + scheduleId + '?')) return;
+
+      const res = await fetch(`${API_DOCTOR}/api/schedules/${scheduleId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Delete failed');
+      showMessage(`Schedule ${scheduleId} deleted`, 'success');
+      loadSchedules();
+    } catch (e) {
+      showMessage(e.message || e, 'error');
     }
   }
 
@@ -284,12 +331,13 @@
     auth = checkAuth();
     if (!auth) return;
     updateNavigation();
-    if (auth.role !== 'PATIENT') {
-      showMessage('Appointment booking is available for patients only.', 'error');
+    if (auth.role !== 'DOCTOR') {
+      showMessage('Restricted: schedule management for doctors only.', 'error');
     }
+    document.getElementById('doctorId').value = auth.user.doctorId || '';
+    document.getElementById('currentDoctorId').textContent = auth.user.doctorId || 'N/A';
     loadHospitals();
     loadSchedules();
-    loadAppointments();
   })();
 </script>
 </body>
