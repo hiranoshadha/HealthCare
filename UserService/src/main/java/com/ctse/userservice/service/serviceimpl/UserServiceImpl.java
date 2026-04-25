@@ -27,6 +27,7 @@ public class UserServiceImpl implements UserService {
     private static final String ROLE_PATIENT = "PATIENT";
     private static final String ROLE_DOCTOR = "DOCTOR";
 
+    //Comment
     private final UserRepository userRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
