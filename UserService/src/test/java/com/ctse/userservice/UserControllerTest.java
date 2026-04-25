@@ -49,7 +49,7 @@ class UserControllerTest {
         doctorDTO = new DoctorDTO(
                 1L, "Dr. Ishan", "Madusanka", "Dermatology",
                 "LIC123456", "ishan@hospital.com", "0771234567",
-                2L, "ishan_doc", "DOCTOR"
+                2L, "ishan_doc", "DOCTOR", null
         );
 
         loginDTO = new LoginDTO("johndoe", "password123");
@@ -79,9 +79,10 @@ class UserControllerTest {
 
     @Test
     void createPatient_returns201() {
+        patientDTO.setPassword("password123");
         when(userService.createPatient(any(PatientDTO.class), eq("password123"))).thenReturn(patientDTO);
 
-        ResponseEntity<PatientDTO> response = userController.createPatient(patientDTO, "password123");
+        ResponseEntity<PatientDTO> response = userController.createPatient(patientDTO);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody()).isEqualTo(patientDTO);
@@ -160,9 +161,10 @@ class UserControllerTest {
 
     @Test
     void createDoctor_returns201() {
+        doctorDTO.setPassword("password123");
         when(userService.createDoctor(any(DoctorDTO.class), eq("password123"))).thenReturn(doctorDTO);
 
-        ResponseEntity<DoctorDTO> response = userController.createDoctor(doctorDTO, "password123");
+        ResponseEntity<DoctorDTO> response = userController.createDoctor(doctorDTO);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody()).isEqualTo(doctorDTO);
@@ -193,7 +195,7 @@ class UserControllerTest {
         DoctorDTO doctor2 = new DoctorDTO(
                 2L, "Dr. Amara", "Wijesinghe", "Cardiology",
                 "LIC789012", "amara@hospital.com", "0779876543",
-                3L, "amara_doc", "DOCTOR"
+                3L, "amara_doc", "DOCTOR", null
         );
         when(userService.getAllDoctors()).thenReturn(List.of(doctorDTO, doctor2));
 
@@ -208,7 +210,7 @@ class UserControllerTest {
         DoctorDTO updated = new DoctorDTO(
                 1L, "Dr. Ishan", "Madusanka", "Neurology",
                 "LIC999999", "ishan.updated@hospital.com", "0779999999",
-                2L, "ishan_doc", "DOCTOR"
+                2L, "ishan_doc", "DOCTOR", null
         );
         when(userService.updateDoctor(eq(1L), any(DoctorDTO.class))).thenReturn(updated);
 
